@@ -4,6 +4,7 @@
 gordongames is a gym environment for recreating computational versions of games proposed in Peter Gordon's paper [_Numerical Cognition Without Words: Evidence from Amazonia_](https://www.science.org/doi/10.1126/science.1094492). 
 
 ## Dependencies
+- python3
 - pip
 - gym
 - numpy
