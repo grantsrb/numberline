@@ -22,16 +22,17 @@ class Grid:
         Args:
           grid_size: int or tuple (n_row, n_col)
             the dimensions of the grid. An integer arg creates a square,
-            otherwise a tuple creates an n_row X n_col grid. HeightXWidth
+            otherwise a tuple creates an n_row X n_col grid.
+            Height X Width
           pixel_density: int
-            the number of pixels per coordinate. If the argument is greater
-            than 1, the coordinate is filled in the upper most left corner
-            while leaving one pixel at the lower and rightmost boundaries
-            blank.
+            the number of pixels per coordinate. If the argument is
+            greater than 1, the coordinate is filled in the upper most
+            left corner while leaving one pixel at the lower and
+            rightmost boundaries blank.
           divide: bool
-            if true, a divider is drawn horizontally across the middle of
-            the grid. If even number of rows, the divder is rounded up
-            after dividing the height by two
+            if true, a divider is drawn horizontally across the middle 
+            of the grid. If even number of rows, the divder is rounded
+            up after dividing the height by two
         """
         self._divided = divide
         if type(grid_size) == int:
@@ -90,8 +91,9 @@ class Grid:
         
         Args:
           coord: int or array like (row from top, column from left)
-            the coord is the coordinate on the grid in terms of grid units
-            if an int is argued, only that converted value is returned
+            the coord is the coordinate on the grid in terms of grid
+            units if an int is argued, only that converted value is
+            returned
         """
         if type(coord) == int:
           return coord*self.density,
@@ -169,7 +171,8 @@ class Grid:
         
         Args:
           coord: array like of length 2 (row from top, column from left)
-            the coord is the coordinate on the grid in terms of grid units
+            the coord is the coordinate on the grid in terms of grid
+            units
           color: float
             the value that should be drawn to the coordinate
           add_color: bool default True
@@ -193,8 +196,8 @@ class Grid:
                    color: float,
                    add_color: bool=True):
         """
-        Slice draws the color across a range of coordinates. It acts much
-        like a numpy slice:
+        Slice draws the color across a range of coordinates. It acts
+        much like a numpy slice:
         
           numpy_array[row0:row1, col0:col1] = color
         

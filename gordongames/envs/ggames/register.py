@@ -101,6 +101,11 @@ class Register:
         self.coord_register = {
             (0,0): set(*self.obj_register)
         }
+        for row in range(self.grid.shape[0]):
+            for col in range(self.grid.shape[1]):
+                coord = (row,col)
+                if coord != (0,0):
+                    self.coord_register[coord] = set()
     
     def make_targs(self, n_targs: int):
         """
@@ -144,15 +149,16 @@ class Register:
             1: grab item. item will follow player to whichever square
               they move to.
         """
-        self.player = self.move_object(self.player, move)
+        did_move = self.move_object(self.player, move)
         if grab > 0:
             # Check for GameObject on player coordinate
-            if player_coord in self.coord_register:
-                
+            if self.player.coord in self.coord_register:
+                # object exists
 
     def move_object(self, gameObject: GameObject, move:int):
         """
         Takes an object and updates its coordinate to reflect the move.
+        Updates are reflected in coord_register
 
         Args:
             gameObject: GameObject
@@ -160,9 +166,29 @@ class Register:
             move: int
                 the movement direction. See DIRECTIONS constant
         """
+        grid = self.grid
         move = move % len(DIRECTIONS)
         if move == UP:
-            # TODO change grid to x,y coordinate system?
+            coord = (gameObject.coord[0]-1, gameObject.coord[1])
+        elif move == RIGHT:
+            coord = (gameObject.coord[0], gameObject.coord[1]+1)
+        elif move == DOWN:
+            coord = (gameObject.coord[0]+1, gameObject.coord[1])
+        elif move == LEFT:
+            coord = (gameObject.coord[0], gameObject.coord[1]-1)
+        else:
+            return
+        in_bounds1 = grid.is_divided and grid.is_inhalfbounds(coord)
+        in_bounds2 = not grid.is_divided and grid.is_inbounds(coord)
+        if in_bounds1 or in_bounds2:
+            gameObject.prev_coord = gameObject.coord
+            gameObject.coord = (row, col)
+            prev = gameObject.prev_coord
+            if gameObject in self.coord_register[prev]:
+                self.coord_register[prev].remove(gameObject)
+            self.coord_register[coord].add(gameObject)
+            return True
+        return False
 
     def draw_register(self):
         """
@@ -198,7 +224,8 @@ class GameObject:
                  coord: list like=(0,0)):
         """
         obj_type: str
-          the type of object. see OBJECT_TYPES for a list of available types.
+          the type of object. see OBJECT_TYPES for a list of available
+          types.
         color: float
           the color of the object
         coord: list like (row, col) in grid units
