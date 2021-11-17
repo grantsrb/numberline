@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from constants import PLAYER, TARG, PILE, ITEM, DIVIDER, BUTTON, OBJECT_TYPES, STAY, UP, RIGHT, DOWN, LEFT, DIRECTIONS, COLORS, EVENTS, STEP, BUTTON, FULL, DEFAULT
 
 """
 The grid class handles the drawing of objects to the image. It enables
@@ -12,8 +13,6 @@ down from the top and 3 rows over from the left. Coordinates refer
 to grid units, NOT PIXELS.
 """
 class Grid:
-    DEFAULT_COLOR = 0
-    
     def __init__(self,
                  grid_size: int or tuple=(31,31),
                  pixel_density: int=1,
@@ -71,7 +70,7 @@ class Grid:
         return self._grid_size
     
     @property
-    def pixel_shape():
+    def pixel_shape(self):
         """
         Returns the shape of the grid in terms of pixels rather than grid
         units
@@ -84,7 +83,13 @@ class Grid:
     @property
     def grid(self):
         return self._grid.copy()
-    
+
+    @property
+    def middle_row(self):
+        half = self.shape[0]/2
+        if half == int(half): return half + 1
+        else: return math.ceil(half)
+
     def units2pixels(self, coord):
         """
         Converts coordinate units to pixels
@@ -95,11 +100,11 @@ class Grid:
             units if an int is argued, only that converted value is
             returned
         """
-        if type(coord) == int:
-          return coord*self.density,
+        if type(coord) == int or type(coord) == float:
+          return int(coord*self.density)
         return (
-          coord[0]*self.density,
-          coord[1]*self.density
+          int(coord[0]*self.density),
+          int(coord[1]*self.density)
         )
     
     def pixels2units(self, pixel_coord):
@@ -113,8 +118,8 @@ class Grid:
         """
         shape = self.shape
         return (
-          int(pixel_coord[0]/shape[0]),
-          int(pixel_coord[1]/shape[1]
+          int(pixel_coord[0]/self.density),
+          int(pixel_coord[1]/self.density)
         )
     
     def make_grid(self, do_divide=True):
@@ -130,12 +135,18 @@ class Grid:
           grid: ndarry (H,W)
             a numpy array representing the grid
         """
-        self._grid = np.zeros(self.pixel_shape) + DEFAULT_COLOR
+        self._grid = np.zeros(self.pixel_shape) + COLORS[DEFAULT]
         if do_divide:
-            middle = math.ceil(self.shape[0]/2)
-            edge = self.shape[1]
-            self.slice_draw((middle, 0), (middle, edge), COLORS[DIVIDER])
+            self.draw_divider()
+        return self._grid
     
+    def reset(self):
+        """
+        Resets the grid to the initial specifications with new
+        reference to the grid.
+        """
+        self.make_grid(do_divide=self.is_divided)
+
     def clear_unit(self, coord):
         """
         Clears a single coordinate in place. More efficient than using
@@ -145,30 +156,37 @@ class Grid:
           coord: list like (row, col)
         """
         prow,pcol = self.units2pixels(coord)
-        self._grid[prow:prow+self.density, pcol:pcol+self.density] = 0
+        self._grid[prow:prow+self.density, pcol:pcol+self.density] = COLORS[DEFAULT]
     
-    def clear_divided(self):
+    def clear_playable_space(self):
         """
         Clears the playable space of the grid in place. This means it
         zeros all information above the dividing line. If you want to 
         clear the whole grid in place, use self.clear
         """
-        middle = math.ceil(self.shape[0]/2)
-        self._grid[0:middle,:] = 0
+        middle = self.units2pixels(self.middle_row)
+        self._grid[:middle,:] = COLORS[DEFAULT]
     
-    def clear(self):
+    def clear(self, remove_divider=False):
         """
         Clears the whole grid in place.
+
+        Args:
+            remove_divider: bool
+                if true, the divider is wiped from the grid as well.
+                only applies if self.is_divided is true
         """
-        self._grid[:,:] = 0
+        self._grid[:,:] = COLORS[DEFAULT]
+        if self.is_divided and not remove_divider:
+            self.draw_divider()
     
-    def draw(self, coord: list like, color: float, add_color: bool=True):
+    def draw(self, coord: tuple, color: float, add_color: bool=True):
         """
         This function handles the actual drawing on the grid. The argued
         color is drawn to the specified coordinate. Can add the argued
         color to the existing value or can replace the existing color
         with the argued depending on the value of add_color.
-        
+
         Args:
           coord: array like of length 2 (row from top, column from left)
             the coord is the coordinate on the grid in terms of grid
@@ -179,20 +197,18 @@ class Grid:
             if true, the argued color is added to the existing value
             rather than replacing it.
         """
-        assert len(coord) == 2
         # Coordinates that are off the grid are simply not drawn
-        if not (coord[0] < 0 or coord[0] >= self.shape[0]): return
-        elif not (coord[1] < 0 or coord[1] >= self.shape[1]): return
+        if not self.is_inbounds(coord): return
         row,col = self.units2pixels(coord)
-        density = max(1,self.density-1)
+        draw_space = max(1,self.density-1)
         if add_color:
-            self._grid[row:row+density, col:col+density] += color
+            self._grid[row:row+draw_space, col:col+draw_space] += color
         else:
-            self._grid[row:row+density, col:col+density] = color
+            self._grid[row:row+draw_space, col:col+draw_space] = color
     
     def slice_draw(self,
-                   coord0: list like,
-                   coord1: list like,
+                   coord0: tuple,
+                   coord1: tuple,
                    color: float,
                    add_color: bool=True):
         """
@@ -210,6 +226,11 @@ class Grid:
             instead of replacing it.
                 ndarray[row0:row1, col0:col1] += color
         """
+        coord0 = (max(0, coord0[0]), max(0,coord0[1]))
+        coord1 = (
+            min(self.shape[0], coord1[0]),
+            min(self.shape[1],coord1[1])
+        )
         row0,col0 = coord0
         row1,col1 = coord1
         if row0 > row1 or col0 > col1: return
@@ -224,12 +245,13 @@ class Grid:
             coord1 = (row1, col1)
         
         # Make unit
-        unit = np.zeros((self.density, self.density)) + DEFAULT_COLOR
+        unit = np.zeros((self.density, self.density)) + COLORS[DEFAULT]
         unit = unit.astype(np.float)
-        unit[0:additive, 0:additive] = color
+        draw_space = max(self.density-1, 1)
+        unit[0:draw_space, 0:draw_space] = color
         # Tile the unit
-        n_row = coord1[0]-coord0[0]
-        n_col = coord1[1]-coord0[1]
+        n_row = int(coord1[0]-coord0[0])
+        n_col = int(coord1[1]-coord0[1])
         tiles = np.tile(unit, (n_row, n_col))
         # Draw to the grid
         pxr0, pxc0 = self.units2pixels(coord0)
@@ -238,7 +260,21 @@ class Grid:
             self._grid[pxr0:pxr1, pxc0:pxc1] += tiles
         else:
             self._grid[pxr0:pxr1, pxc0:pxc1] = tiles
-    
+
+    def draw_divider(self):
+        """
+        Draws a divider across the middle row of the grid. Rounds up if
+        even number of rows in grid.
+        """
+        middle = self.middle_row
+        edge = self.shape[1]
+        self.slice_draw(
+            (middle, 0),
+            (middle, edge),
+            color=COLORS[DIVIDER],
+            add_color=False
+        )
+
     def row_inbounds(self, row):
         """
         Determines if the argued row is within the bounds of the grid
@@ -287,5 +323,30 @@ class Grid:
             true if the argued row is visually above the divided bounds
             of the grid
         """
-        return row >= 0 and row < math.ceil(self.shape[0]/2)
+        return row >= 0 and row < self.middle_row
+    
+    def is_inhalfbounds(self, coord):
+        """
+        Takes a coord and determines if it is within the divided
+        boundaries of the grid.
+        
+        Args:
+          coord: list like (row, col)
+            the coordinate in grid units
+        """
+        row,col = coord
+        return self.row_inhalfbounds(row) and self.col_inbounds(col)
+    
+    def is_playable(self, coord):
+        """
+        Takes a coord and determines if it is within the divided
+        boundaries of the grid if the grid is divided, or simply
+        within the boundaries of the grid if the grid is not divided.
+
+        Args:
+          coord: list like (row, col)
+            the coordinate in grid units
+        """
+        if self.is_divided: return self.is_inhalfbounds(coord)
+        return self.is_inbounds(coord)
 
