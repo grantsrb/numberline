@@ -46,7 +46,7 @@ COLORS = {
     ITEM: .09,
     PLAYER: .69,
     DIVIDER: -.3,
-    BUTTON: .17,
+    BUTTON: -.1,
     DEFAULT: 0,
 }
 

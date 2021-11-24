@@ -1,7 +1,7 @@
-from grid import Grid
+from gordongames.envs.ggames.grid import Grid
 import math
 import numpy as np
-from constants import PLAYER, TARG, PILE, ITEM, DIVIDER, BUTTON, BUTTON_PRESS, OBJECT_TYPES, STAY, UP, RIGHT, DOWN, LEFT, DIRECTIONS, COLORS, EVENTS, STEP, FULL, DEFAULT
+from gordongames.envs.ggames.constants import PLAYER, TARG, PILE, ITEM, DIVIDER, BUTTON, BUTTON_PRESS, OBJECT_TYPES, STAY, UP, RIGHT, DOWN, LEFT, DIRECTIONS, COLORS, EVENTS, STEP, FULL, DEFAULT
 
 class GameObject:
     """
@@ -100,12 +100,12 @@ class Register:
         self.player = GameObject(obj_type=PLAYER, color=COLORS[PLAYER])
         self.pile = GameObject(obj_type=PILE, color=COLORS[PILE])
         self.button = GameObject(obj_type=BUTTON, color=COLORS[BUTTON])
-        self.targs = self.make_targs(n_targs)
+        self._targs = self.make_targs(n_targs)
         self.obj_register = {
             self.player,
             self.pile,
             self.button,
-            *self.targs
+            *self._targs
         }
         self.coord_register = dict()
         for row in range(self.grid.shape[0]):
@@ -118,12 +118,41 @@ class Register:
 
     @property
     def n_targs(self):
-        return len(self.targs)
+        return len(self._targs)
 
-    def reset(self):
+    @property
+    def items(self):
+        """
+        Filters the obj_register for the item type gameobjects
+
+        Returns:
+            items: set of GameObjects
+        """
+        items = set()
+        for obj in self.obj_register:
+            if obj.type == ITEM: items.add(obj)
+        return items
+
+    @property
+    def targs(self):
+        """
+        Filters the obj_register for the targ type gameobjects
+
+        Returns:
+            targs: set of GameObjects
+        """
+        return {*self._targs}
+
+    def reset(self, n_targs: None or int=None):
         """
         Resets the grid and draws the register to the grid
+
+        Args:
+            n_targs: None or int
+                if int, changes the number of targets to match the
+                argued value. targs are deleted randomly.
         """
+        if n_targs is not None: self.initialize_targs(n_targs)
         self.grid.reset()
         self.delete_items()
         self.draw_register()
@@ -168,7 +197,7 @@ class Register:
 
     def make_targs(self, n_targs: int):
         """
-        Creates the intial target objects
+        Creates the intial target objects. DOES NOT REGISTER THEM!!
         
         Args:
           n_targs: int
@@ -183,7 +212,36 @@ class Register:
             )
             targs.add(targ)
         return targs
-    
+
+    def initialize_targs(self, n_targs: int):
+        """
+        Creates or deletes targets from the self._targs set to match
+        the argued number of target objects.
+        
+        Args:
+          n_targs: int
+            the desired number of targets
+        """
+        if not hasattr(self, "_targs"):
+            self._targs = self.make_targs(n_targs)
+        elif len(self._targs) < n_targs:
+            n = n_targs - len(self._targs)
+            self._targs = {*self._targs, *self.make_targs(n)}
+        elif len(self._targs) > n_targs:
+            for i in range(len(self._targs)-n_targs):
+                self.delete_obj(self._targs.pop())
+        self.register_targs()
+        return self._targs
+
+    def register_targs(self):
+        """
+        Used as a failsafe to ensure all targs are registered in both
+        the obj and coord registers
+        """
+        for targ in self._targs:
+            self.obj_register.add(targ)
+            self.coord_register[targ.coord].add(targ)
+
     def step(self, direction: int, grab: int):
         """
         Step takes two actions and moves the player and any items
@@ -309,7 +367,7 @@ class Register:
             """
             loc: tuple coordinate in grid units (row, col)
             """
-            return self.is_empty(loc) and self.is_playable(loc)
+            return self.is_playable(loc) and self.is_empty(loc)
         row,col = coord
         layer = 0
         while layer < max(*self.grid.shape):
@@ -317,7 +375,7 @@ class Register:
             min_row = row - layer
             min_col = col - layer
             max_row = row + layer
-            max_col = row + layer
+            max_col = col + layer
             for i in range(max_col-min_col+1):
                 loc = (min_row, min_col+i)
                 if test_loc(loc): return loc
@@ -341,7 +399,9 @@ class Register:
         Args:
             coord: tuple in grid units (row, col)
         """
-        objs = self.coord_register[tuple(coord)]
+        coord = tuple(coord)
+        if not self.is_playable(coord): return False
+        objs = self.coord_register[coord]
         if len(objs) == 0: return True
         elif len(objs) == 1 and self.player in objs: return True
         return False
@@ -360,28 +420,26 @@ class Register:
             game_object: GameObject
                 the gameobject to be deleted
         """
-        try:
-            self.grid.draw(
-                game_object.prev_coord,
-                -game_object.color,
-                add_color=True
-            )
+        self.grid.draw(
+            game_object.prev_coord,
+            -game_object.color,
+            add_color=True
+        )
+        if game_object.coord in self.coord_register:
             self.coord_register[game_object.coord].remove(game_object)
-            self.obj_register.remove(game_object)
-            if game_object.type == TARG: self.targs.remove(game_object)
-            elif game_object == self.player: del self.player
-            elif game_object == self.button: del self.button
-            elif game_object == self.pile: del self.pile
-            del game_object
-        except:
-            print("Somthing went wrong deleting game object")
-            pass
+        self.obj_register.remove(game_object)
+        if game_object.type == TARG: self._targs.remove(game_object)
+        elif game_object == self.player: del self.player
+        elif game_object == self.button: del self.button
+        elif game_object == self.pile: del self.pile
+        else: del game_object
 
     def delete_items(self):
         """
         Deletes all items from the registers.
         """
-        for obj in self.obj_register:
+        reg = {*self.obj_register}
+        for obj in reg:
             if obj.type == ITEM: self.delete_obj(obj)
 
     def handle_grab(self, player):
@@ -590,7 +648,7 @@ class Register:
             self.grid.shape[0]
         )
         avail_col_space = self.grid.shape[1] - self.n_targs
-        max_spacing = avail_col_space//(self.n_targs-1)
+        max_spacing = avail_col_space//max(self.n_targs-1, 1)
         space_between = 0
         if max_spacing > 0:
             space_between = np.random.randint(0,max_spacing)
@@ -598,7 +656,7 @@ class Register:
         taken_space = self.n_targs + space_between*(self.n_targs-1)
         space_left = self.grid.shape[1]-taken_space
         start_col = np.random.randint(0,space_left+1)
-        for i,targ in enumerate(self.targs):
+        for i,targ in enumerate(self._targs):
             col = start_col + i*(space_between+1)
             coord = (row, col)
             self.move_object(targ, coord=coord)
@@ -630,13 +688,13 @@ class Register:
         spacings = np.random.permutation(spacings)
         start_col = np.random.randint(0,avail_col_space+1)
 
-        for i,targ in enumerate(self.targs):
+        for i,targ in enumerate(self._targs):
             if i > 0:
                 start_col = start_col + spacings[i-1] + 1
             coord = (row, start_col)
             self.move_object(targ, coord=coord)
 
-    def line_match(self):
+    def even_line_match(self):
         """
         Initialization function for the line match game A.
 

@@ -29,36 +29,36 @@ before calling `render()`.
 ## Using gordongames
 After installation, you can use gordongames by making one of the gym environments. See the paper [_Numerical Cognition Without Words: Evidence from Amazonia_](https://www.science.org/doi/10.1126/science.1094492) for more details about each game.
 
-#### Environment A
-Use `gym.make('gordongames-A')` to create the Line Match game. The agent must match the number of target objects by aligning them within the target columns. Targets are evenly spaced. These are the default options for the game (see Game Details to understand what each variable does):
+#### Environment v0
+Use `gym.make('gordongames-v0')` to create the Line Match game. The agent must match the number of target objects by aligning them within the target columns. Targets are evenly spaced. These are the default options for the game (see Game Details to understand what each variable does):
 
     grid_size = [33,33]
     pixel_density = 1
     targ_range = (1,10)
 
-#### Environment B
-Use `gym.make('gordongames-B')` to create the Cluster Line Match game. The agent must match the number of target objects without aligning them. These are the default options for the game (see Game Details to understand what each variable does):
+#### Environment v1
+Use `gym.make('gordongames-v1')` to create the Cluster Line Match game. The agent must match the number of target objects without aligning them. These are the default options for the game (see Game Details to understand what each variable does):
 
     grid_size = [33,33]
     pixel_density = 1
     targ_range = (1,10)
 
-#### Environment C
-Use `gym.make('gordongames-C')` to create the Orthogonal Line Match game. The agent must match the number of target objects aligning them along a single column. These are the default options for the game (see Game Details to understand what each variable does):
+#### Environment v2
+Use `gym.make('gordongames-v2')` to create the Orthogonal Line Match game. The agent must match the number of target objects aligning them along a single column. These are the default options for the game (see Game Details to understand what each variable does):
 
     grid_size = [33,33]
     pixel_density = 1
     targ_range = (1,10)
 
-#### Environment D
-Use `gym.make('gordongames-D')` to create the Uneven Line Match game. The agent must match the target objects by aligning them along each respective target column. The targets are unevenly spaced. These are the default options for the game (see Game Details to understand what each variable does):
+#### Environment v3
+Use `gym.make('gordongames-v3')` to create the Uneven Line Match game. The agent must match the target objects by aligning them along each respective target column. The targets are unevenly spaced. These are the default options for the game (see Game Details to understand what each variable does):
 
     grid_size = [33,33]
     pixel_density = 1
     targ_range = (1,10)
 
-#### Environment G
-Use `gym.make('gordongames-G')` to create the Nuts-In-Can game. The agent watches a number of target objects get placed into a pile. The agent must then remove the correct number of objects. These are the default options for the game (see Game Details to understand what each variable does):
+#### Environment v4
+Use `gym.make('gordongames-v4')` to create the Nuts-In-Can game. The agent watches a number of target objects get placed into a pile. The agent must then remove the correct number of objects. These are the default options for the game (see Game Details to understand what each variable does):
 
     grid_size = [33,33]
     pixel_density = 1
@@ -73,19 +73,19 @@ A +1 reward is returned only in the event of a successful completion of the task
 
 A -1 reward is returned when a task ends unsuccessfully.
 
-##### Environment A
+##### Environment v0
 The agent receives a +1 reward if each target has a single item located in its column at the end of the episode.
 
-##### Environment B
+##### Environment v1
 The agent receives a +1 reward if there exists a single item for each target. Alignment is not considered.
 
-##### Environment C
+##### Environment v2
 The agent receives a +1 reward if there exists an item for each target. All items must be aligned along a single column.
 
-##### Environment D
+##### Environment v3
 The agent receives a +1 reward if each target has a single item located in its column at the end of the episode.
 
-##### Environment G
+##### Environment v4
 The agent receives a +1 reward if the agent removes the exact number of items placed in the pile.
 
 
@@ -97,7 +97,7 @@ The agent receives a +1 reward if the agent removes the exact number of items pl
 
 Each of these options are member variables of the environment and will come into effect after the environment is reset. For example, if you wanted to use 1-5 targets in game A, you can be set this using the following code:
 
-    env = gym.snake('gordongames-A')
+    env = gym.snake('gordongames-v0')
     env.targ_range = (1,5)
     observation = env.reset()
 
