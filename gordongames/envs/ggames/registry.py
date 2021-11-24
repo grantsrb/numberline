@@ -228,8 +228,9 @@ class Register:
             n = n_targs - len(self._targs)
             self._targs = {*self._targs, *self.make_targs(n)}
         elif len(self._targs) > n_targs:
+            targs = self.targs
             for i in range(len(self._targs)-n_targs):
-                self.delete_obj(self._targs.pop())
+                self.delete_obj(targs.pop())
         self.register_targs()
         return self._targs
 

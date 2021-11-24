@@ -11,7 +11,8 @@ Gordon games.
 
 class Controller:
     """
-    The base controller class for handling initializations
+    The base controller class for handling initializations. It is
+    abstract and as such should not be implemented directly
     """
     def __init__(self,
                  targ_range: tuple=(1,10),
@@ -47,6 +48,10 @@ class Controller:
     @property
     def density(self):
         return self._pixel_density
+
+    @property
+    def n_targs(self):
+        return self.register.n_targs
 
     def calculate_reward(self):
         raise NotImplemented
@@ -90,7 +95,7 @@ class Controller:
         event = self.register.step(direction, grab)
         info = {
             "is_harsh": self.harsh,
-            "n_targs": self.register.n_targs,
+            "n_targs": self.n_targs,
         }
         if event == BUTTON_PRESS:
             rew = self.calculate_reward(harsh=self.harsh)
