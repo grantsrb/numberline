@@ -153,8 +153,8 @@ class Register:
                 argued value. targs are deleted randomly.
         """
         if n_targs is not None: self.initialize_targs(n_targs)
-        self.grid.reset()
         self.delete_items()
+        self.grid.reset()
         self.draw_register()
 
     def register_button_event_handler(self, fxn):
@@ -563,9 +563,8 @@ class Register:
         includes if the action is STAY and successfully completed.
 
         Args:
-            direction: int or None
-                the movement direction. See DIRECTIONS constant. coord
-                must be None if this is not None
+            direction: int
+                the movement direction. See DIRECTIONS constant.
         Returns:
             did_move: bool
                 if true, the move was legal and object was moved.
@@ -575,7 +574,10 @@ class Register:
         """
         direction = direction % len(DIRECTIONS)
         coord = self.apply_direction(self.player.coord, direction)
-        return self.move_object(self.player, coord)
+        if self.grid.is_playable(coord):
+            return self.move_object(self.player, coord)
+        else:
+            return False
 
     def draw_register(self):
         """

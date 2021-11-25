@@ -185,15 +185,15 @@ class EvenLineMatchController(Controller):
         """
         targs = self.register.targs
         items = self.register.items
-        if harsh:
-            if len(targs) != len(items): return 0
+        if harsh and len(targs) != len(items): return -1
 
         item_rows, item_cols = get_rows_and_cols(items)
         _, targ_cols = get_rows_and_cols(targs)
 
-        if len(item_rows) > 1: return 0
+        if len(item_rows) > 1: return -1
         if harsh:
-            return int(targ_cols == item_cols)
+            if targ_cols == item_cols: return 1
+            return -1
         else:
             intersection = targ_cols.intersection(item_cols)
             rew = len(intersection)
@@ -246,10 +246,12 @@ class ClusterLineMatchController(EvenLineMatchController):
         items = self.register.items
         n_targs = len(targs)
         n_items = len(items)
-        if harsh and n_targs != n_items: return 0
+        if harsh and n_targs != n_items: return -1
+        # *_rows and *_cols are all sets
         item_rows, item_cols = get_rows_and_cols(items)
         _, targ_cols = get_rows_and_cols(targs)
-        if len(item_rows) == 1 or targ_cols == item_cols: return 0
+
+        if len(item_rows) == 1 or targ_cols == item_cols: return -1
         # already know same number of items as targs if harsh
         if harsh: return 1
         else: return 1 - np.abs(n_item-n_targ)/n_targ
@@ -314,8 +316,7 @@ class OrthogonalLineMatchController(EvenLineMatchController):
         items = self.register.items
         n_targs = len(targs)
         n_items = len(items)
-        if harsh:
-            if n_targs != n_items: return 0
+        if harsh and n_targs != n_items: return -1
         _, item_cols = get_rows_and_cols(items)
         item_rows = sorted([i.coord[0] for i in items])
         targ_cols = sorted([t.coord[1] for t in targs])
@@ -325,8 +326,8 @@ class OrthogonalLineMatchController(EvenLineMatchController):
         spacing_error = self.calc_spacing_error(item_rows,targ_spacing)
         col_error = len(item_cols) - 1
         if harsh:
-            if col_error > 0 or spacing_error > 0: return 0
-            else: return 1
+            if col_error > 0 or spacing_error > 0: return -1
+            return 1
         return count_error - spacing_error - col_error
 
     def calc_spacing_error(self, arr: list, targ_spacing: int):
