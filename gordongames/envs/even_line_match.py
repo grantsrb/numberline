@@ -28,7 +28,8 @@ class EvenLineMatch(gym.Env):
                  targ_range=(1,10),
                  grid_size=(31,31),
                  pixel_density=5,
-                 harsh=True):
+                 harsh=True,
+                 *args, **kwargs):
         """
         Args:
             targ_range: tuple of ints (low, high) (both inclusive)
@@ -50,13 +51,18 @@ class EvenLineMatch(gym.Env):
         self.max_step_base = self.grid_size[0]//2*self.grid_size[1]*2
         # gets set in reset(), limits number of steps per episode
         self.max_steps = 0
+        self.targ_range = targ_range
+        if type(targ_range) == int:
+            self.targ_range = (targ_range,targ_range)
         self.harsh = harsh
         self.viewer = None
         self.action_space = Discrete(6)
         self.is_grabbing = False
         self.controller = EvenLineMatchController(
-            harsh=harsh,
-            targ_range=targ_range,
+            grid_size=self.grid_size,
+            pixel_density=self.pixel_density,
+            harsh=self.harsh,
+            targ_range=self.targ_range
         )
         self.controller.reset()
 
@@ -65,10 +71,9 @@ class EvenLineMatch(gym.Env):
         coord = self.controller.register.player.coord
         if self.is_grabbing:
             self.is_grabbing = False
+        # we know is_grabbing is false here
         elif not self.controller.register.is_empty(coord):
             self.is_grabbing = True
-        else:
-            self.is_grabbing = False
         return grab
 
     def step(self, action):
@@ -111,6 +116,7 @@ class EvenLineMatch(gym.Env):
     def reset(self):
         self.controller.reset()
         self.max_steps = (self.controller.n_targs+1)*self.max_step_base
+        self.is_grabbing = False
         self.step_count = 0
         self.last_obs = self.controller.grid.grid
         return self.last_obs
