@@ -7,6 +7,7 @@ if __name__=="__main__":
         "grid_size": (10,10),
         "pixel_density": 1,
         "targ_range": (1,4),
+        "harsh": False,
     }
     env = gym.make("gordongames-v0", **args)
 
@@ -22,7 +23,7 @@ if __name__=="__main__":
         elif key == "d": action = RIGHT
         elif key == "s": action = DOWN
         elif key == "a": action = LEFT
-        elif key == "g": action = 5
+        elif key == "f": action = 5
         obs, rew, done, info = env.step(action)
         print("rew:", rew)
         print("done:", done)

@@ -109,7 +109,7 @@ class EvenLineMatch(gym.Env):
                                                            int(grab))
         if self.step_count > self.max_steps: done = True
         elif self.step_count == self.max_steps and rew == 0:
-            rew = -1
+            rew = self.controller.max_punishment
             done = True
         return self.last_obs, rew, done, info
 

@@ -53,6 +53,10 @@ class Controller:
     def n_targs(self):
         return self.register.n_targs
 
+    @property
+    def max_punishment(self):
+        return -self.targ_range[1]
+
     def calculate_reward(self):
         raise NotImplemented
 
@@ -198,8 +202,8 @@ class EvenLineMatchController(Controller):
             intersection = targ_cols.intersection(item_cols)
             rew = len(intersection)
             rew -= (len(item_cols)-len(intersection))
-            rew -= max(0, len(items)-len(targs))
-            return rew / self.grid.shape[1]
+            rew -= max(0, np.abs(len(items)-len(targs)))
+            return rew
 
 class ClusterLineMatchController(EvenLineMatchController):
     """
