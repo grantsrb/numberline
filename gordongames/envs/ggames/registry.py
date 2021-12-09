@@ -152,9 +152,9 @@ class Register:
                 if int, changes the number of targets to match the
                 argued value. targs are deleted randomly.
         """
-        if n_targs is not None: self.initialize_targs(n_targs)
         self.delete_items()
-        self.grid.reset()
+        if n_targs is not None: self.initialize_targs(n_targs)
+        self.grid.reset() # makes a fresh grid
         self.draw_register()
 
     def register_button_event_handler(self, fxn):
@@ -229,7 +229,8 @@ class Register:
             self._targs = {*self._targs, *self.make_targs(n)}
         elif len(self._targs) > n_targs:
             targs = self.targs
-            for i in range(len(self._targs)-n_targs):
+            loop_len = len(self._targs)-n_targs
+            for i in range(loop_len):
                 self.delete_obj(targs.pop())
         self.register_targs()
         return self._targs
@@ -707,6 +708,7 @@ class Register:
         # each is randomly placed in the top row of the grid
         self.rand_pile_button_player() 
         self.even_targ_spacing()
+        self.draw_register()
 
     def cluster_line_match(self):
         """
