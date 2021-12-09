@@ -87,8 +87,8 @@ class Grid:
     @property
     def middle_row(self):
         half = self.shape[0]/2
-        if half == int(half): return half + 1
-        else: return math.ceil(half)
+        if self.shape[0] % 2 == 0: return half + 1
+        else: return int(half)
 
     def units2pixels(self, coord):
         """
@@ -135,7 +135,8 @@ class Grid:
           grid: ndarry (H,W)
             a numpy array representing the grid
         """
-        self._grid = np.zeros(self.pixel_shape) + COLORS[DEFAULT]
+        self._grid = np.zeros(self.pixel_shape).astype(np.float)
+        self._grid = self._grid + COLORS[DEFAULT]
         if do_divide:
             self.draw_divider()
         return self._grid
@@ -145,7 +146,7 @@ class Grid:
         Resets the grid to the initial specifications with new
         reference to the grid.
         """
-        self.make_grid(do_divide=self.is_divided)
+        self._grid = self.make_grid(do_divide=self.is_divided)
 
     def clear_unit(self, coord):
         """
