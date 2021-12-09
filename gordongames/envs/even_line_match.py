@@ -135,3 +135,4 @@ class EvenLineMatch(gym.Env):
 
     def seed(self, x):
         np.random.seed(x)
+
