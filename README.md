@@ -20,6 +20,11 @@ gordongames is a gym environment for recreating computational versions of games 
 5. make one of the envs with the folowing: `env = gym.make("gordongames-<version here>")`
 
 ## Rendering
+A common error about matplotlib using `agg` can be fixed by including the following lines in your scripts before calling `.render()`:
+
+    import matplotlib
+    matplotlib.use('TkAgg')
+
 If you are experiencing trouble using the `render()` function while using jupyter notebook, insert:
 
     %matplotlib notebook
