@@ -4,7 +4,7 @@ import gym
 
 if __name__=="__main__":
     args = {
-        "grid_size": (10,10),
+        "grid_size": (9,9),
         "pixel_density": 1,
         "targ_range": (1,4),
         "harsh": False,
@@ -27,6 +27,6 @@ if __name__=="__main__":
         obs, rew, done, info = env.step(action)
         print("rew:", rew)
         print("done:", done)
-        env.render()
         if done:
-            env.reset()
+            obs = env.reset()
+        env.render()
