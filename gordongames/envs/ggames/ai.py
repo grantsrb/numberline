@@ -8,7 +8,7 @@ def get_even_line_goal_coord(player: object,
                              max_row: int):
     """
     Finds the row and col of the goal. If no row is established, it
-    picks row 2.
+    arbitrarily picks row 2. Assumes len(aligned_items) <= len(targs)
 
     Args:
         player: GameObject
@@ -72,6 +72,8 @@ def even_line_match(contr):
     Takes a register and finds the optimal movement and grab action
     for the state of the register.
 
+    Args:
+        contr: Controller
     Returns:
         direction: int
             a directional movement
@@ -84,7 +86,7 @@ def even_line_match(contr):
     targs = register.targs
     # find items that are out of place
     lost_items = get_unaligned_items(items, targs)
-    aligned_items = items-lost_items
+    aligned_items = items-lost_items # set math
 
     # determine which object we should grab next
     if len(items) == len(targs) and len(lost_items) == 0:
@@ -102,15 +104,30 @@ def even_line_match(contr):
     if not grab: goal_coord = grab_obj.coord
     # If we're on top of the button, simply issue a STAY order
     elif grab_obj == register.button: return STAY, grab
+    elif len(items) > len(targs):
+        goal_coord = register.pile.coord
     # Need to find nearest target that has not been completed and
     # find the appropriate coord for placing an item to complete it
     else:
-        goal_coord = get_even_line_goal_coord(
-            player,
-            aligned_items,
-            targs,
-            register.grid.middle_row
-        )
+        try:
+            goal_coord = get_even_line_goal_coord(
+                player,
+                aligned_items,
+                targs,
+                register.grid.middle_row
+            )
+        except:
+            print("lost items")
+            print(lost_items)
+            print("aligned items")
+            print(aligned_items)
+            print("grab_obj")
+            print(grab_obj)
+            print("items")
+            print(items)
+            print("targs")
+            print(targs)
+
     direction = get_direction(player.coord, goal_coord)
     return direction, grab
 
