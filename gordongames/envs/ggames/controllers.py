@@ -1,7 +1,7 @@
 from gordongames.envs.ggames.grid import Grid
 from gordongames.envs.ggames.registry import Register
 from gordongames.envs.ggames.constants import *
-from gordongames.envs.ggames.utils import get_rows_and_cols
+from gordongames.envs.ggames.utils import get_rows_and_cols, get_aligned_items
 import numpy as np
 
 """
@@ -100,6 +100,12 @@ class Controller:
         info = {
             "is_harsh": self.harsh,
             "n_targs": self.n_targs,
+            "n_items": self.register.n_items,
+            "n_aligned": len(get_aligned_items(
+                items=self.register.items,
+                targs=self.register.targs,
+                min_row=1
+            )),
         }
         if event == BUTTON_PRESS:
             rew = self.calculate_reward(harsh=self.harsh)

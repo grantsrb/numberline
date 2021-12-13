@@ -27,6 +27,9 @@ if __name__=="__main__":
         obs, rew, done, info = env.step(action)
         print("rew:", rew)
         print("done:", done)
+        print("info")
+        for key in info.keys():
+            print("    ", key, ": ", info[key])
         if done:
             obs = env.reset()
         env.render()

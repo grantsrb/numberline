@@ -71,6 +71,15 @@ def get_unaligned_items(items: set, targs: set, min_row: int=2):
     row and do not have a target in their column. Only one item
     for one target is allowed.
 
+    Args:
+        items: set of GameObjects
+            the items in the register
+        targs: set of GameObjects
+            the targets in the register
+        min_row: int
+            the minimum row that is allowed to be the majority row. If
+            items are below this row, they are automatically considered
+            loners.
     Returns:
         loners: set of GameObjects
             the items that don't have a corresponding target in
@@ -95,6 +104,29 @@ def get_unaligned_items(items: set, targs: set, min_row: int=2):
             coord_counts[item.coord] -= 1
             loners.add(item)
     return loners
+
+def get_aligned_items(items: set, targs: set, min_row: int=1):
+    """
+    Returns all items that are aligned along the majority row and have
+    a target in their column. Only one item for one target is allowed.
+
+    Args:
+        items: set of GameObjects
+            the items in the register
+        targs: set of GameObjects
+            the targets in the register
+        min_row: int
+            the minimum row that is allowed to be the majority row. If
+            items are below this row, they are automatically considered
+            loners.
+    Returns:
+        aligneds: set of GameObjects
+            the items that have a corresponding target in their column
+            while sitting on the row with the maximum number of
+            aligned items
+    """
+    loners = get_unaligned_items(items, targs, min_row)
+    return items-loners
 
 def max_key(d):
     """

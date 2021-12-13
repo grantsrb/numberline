@@ -121,6 +121,10 @@ class Register:
         return len(self._targs)
 
     @property
+    def n_items(self):
+        return len(self.items)
+
+    @property
     def items(self):
         """
         Filters the obj_register for the item type gameobjects
