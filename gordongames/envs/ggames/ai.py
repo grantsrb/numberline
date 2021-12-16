@@ -1,5 +1,5 @@
 import numpy as np
-from gordongames.envs.ggames.utils import nearest_obj, euc_distance, get_unaligned_items, get_rows_and_cols, get_row_and_col_counts
+from gordongames.envs.ggames.utils import nearest_obj, euc_distance, get_unaligned_items, get_aligned_items, get_rows_and_cols, get_row_and_col_counts
 from gordongames.envs.ggames.constants import *
 
 def get_even_line_goal_coord(player: object,
@@ -128,6 +128,60 @@ def even_line_match(contr):
             print("targs")
             print(targs)
 
+    direction = get_direction(player.coord, goal_coord)
+    return direction, grab
+
+def cluster_match(contr):
+    """
+    Takes a register and finds the optimal movement and grab action
+    for the state of the register in the cluster match game.
+
+    Args:
+        contr: Controller
+    Returns:
+        direction: int
+            a directional movement
+        grab: int
+            whether or not to grab
+    """
+    register = contr.register
+    player = register.player
+    items = register.items
+    targs = register.targs
+    
+    # used later to determine if all items are aligned
+    aligned_items = get_aligned_items(items, targs, min_row=0)
+
+    is_overlapping = register.is_overlapped(player.coord)
+    if len(items) == len(targs) and not is_overlapping:
+        if len(targs) == 1 or len(aligned_items)!=len(targs):
+            grab_obj = register.button # hard work done
+        else: # len(aligned_items) == len(targs)
+            # need to unalign an item
+            grab_obj = nearest_obj(player, aligned_items)
+    elif len(items) >= len(targs):
+        grab_obj = nearest_obj(player, items) # grab existing item
+    elif is_overlapping:
+        grab_obj = nearest_obj(player, items)
+    else:
+        grab_obj = register.pile
+
+    # if on top of grab_obj, grab it, otherwise don't
+    if grab_obj.coord == player.coord: grab = True
+    else: grab = False
+
+    # determine where to move next
+    if not grab: goal_coord = grab_obj.coord
+    # If we're on top of the button, simply issue a STAY order and grab
+    elif grab_obj == register.button: return STAY, grab
+    elif len(items) > len(targs):
+        goal_coord = register.pile.coord
+    # Here we know that we have an item in our grasp. if we're in an
+    # empty space, we can simply drop it. And that will have already
+    # been done in the logic above. We can just search for the nearest
+    # empty space centered on the pile.
+    else:
+        goal_coord = register.find_space(register.pile.coord)
     direction = get_direction(player.coord, goal_coord)
     return direction, grab
 

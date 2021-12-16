@@ -1,1 +1,1 @@
-from gordongames.envs.even_line_match import EvenLineMatch
+from gordongames.envs.gym_envs import EvenLineMatch, ClusterMatch

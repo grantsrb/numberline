@@ -104,9 +104,11 @@ class Controller:
             "n_aligned": len(get_aligned_items(
                 items=self.register.items,
                 targs=self.register.targs,
-                min_row=1
-            )),
+                min_row=0
+            ))
         }
+        done = False
+        rew = 0
         if event == BUTTON_PRESS:
             rew = self.calculate_reward(harsh=self.harsh)
             done = True
@@ -117,6 +119,12 @@ class Controller:
             done = False
             rew = 0
         return self.grid.grid, rew, done, info
+
+    def reset(self, n_targs=None):
+        """
+        This member must be overridden
+        """
+        raise NotImplemented
 
 class EvenLineMatchController(Controller):
     """
@@ -152,13 +160,14 @@ class EvenLineMatchController(Controller):
         self.register = Register(self.grid, n_targs=1)
         self.harsh = harsh
 
-    def reset(self):
+    def reset(self, n_targs=None):
         """
         This function should be called everytime the environment starts
         a new episode.
         """
-        low, high = self.targ_range
-        n_targs = np.random.randint(low, high+1)
+        if n_targs is None:
+            low, high = self.targ_range
+            n_targs = np.random.randint(low, high+1)
         # wipes items from grid and makes/deletes targs
         self.register.reset(n_targs)
         # randomizes object placement on grid
@@ -211,7 +220,7 @@ class EvenLineMatchController(Controller):
             rew -= max(0, np.abs(len(items)-len(targs)))
             return rew
 
-class ClusterLineMatchController(EvenLineMatchController):
+class ClusterMatchController(EvenLineMatchController):
     """
     This class creates an instance of a Cluster Line Match game.
 
@@ -245,9 +254,11 @@ class ClusterLineMatchController(EvenLineMatchController):
                 with targs or if all items are in a single row.
 
                 harsh == False:
-                    rew = (n_targ - abs(n_item-n_targ))/n_targ
+                    rew = (n_targ - abs(n_items-n_targs))/n_targs
                 harsh == True:
-                    rew = n_items == n_targs
+                    rew = +1 when n_items == n_targs and n_aligned != n_targs
+                    rew = 0 when n_items == n_targs and n_aligned == n_targs
+                    rew = -1 otherwise
         Returns:
             rew: float
                 the calculated reward
@@ -256,15 +267,17 @@ class ClusterLineMatchController(EvenLineMatchController):
         items = self.register.items
         n_targs = len(targs)
         n_items = len(items)
-        if harsh and n_targs != n_items: return -1
-        # *_rows and *_cols are all sets
-        item_rows, item_cols = get_rows_and_cols(items)
-        _, targ_cols = get_rows_and_cols(targs)
-
-        if len(item_rows) == 1 or targ_cols == item_cols: return -1
-        # already know same number of items as targs if harsh
-        if harsh: return 1
-        else: return 1 - np.abs(n_item-n_targ)/n_targ
+        n_aligned = len(get_aligned_items(
+            items=items,
+            targs=targs,
+            min_row=0
+        ))
+        if n_aligned == n_targs:
+            return int(n_aligned == 1)
+        if harsh:
+            if n_targs != n_items: return -1
+            else: return 1 # n_targs==n_items and n_aligned != n_targs
+        return (n_targs - np.abs(n_items-n_targs))/n_targs
 
 class UnevenLineMatchController(EvenLineMatchController):
     """
@@ -273,13 +286,14 @@ class UnevenLineMatchController(EvenLineMatchController):
     The agent must align a single item along the column of each of the
     target objects. The target objects are unevenly spaced.
     """
-    def reset(self):
+    def reset(self, n_targs=None):
         """
         This function should be called everytime the environment starts
         a new episode.
         """
-        low, high = self.targ_range
-        n_targs = np.random.randint(low, high+1)
+        if n_targs is None:
+            low, high = self.targ_range
+            n_targs = np.random.randint(low, high+1)
         # wipes items from grid and makes/deletes targs
         self.register.reset(n_targs)
         # randomizes object placement on grid
@@ -315,7 +329,7 @@ class OrthogonalLineMatchController(EvenLineMatchController):
                 harsh is False
 
                 harsh == False:
-                    rew = (n_targ - abs(n_item-n_targ))/n_targ - n_extra
+                    rew = (n_targ - abs(n_items-n_targs))/n_targs - n_extra
                 harsh == True:
                     rew = n_items == n_targs
         Returns:
@@ -332,7 +346,7 @@ class OrthogonalLineMatchController(EvenLineMatchController):
         targ_cols = sorted([t.coord[1] for t in targs])
         targ_spacing = min((targ_cols[1]-targ_cols[0])-1, 1)
 
-        count_error = 1-np.abs(n_item-n_targ)/n_targ
+        count_error = 1-np.abs(n_items-n_targs)/n_targs
         spacing_error = self.calc_spacing_error(item_rows,targ_spacing)
         col_error = len(item_cols) - 1
         if harsh:

@@ -29,6 +29,14 @@ DIRECTIONS = {
     LEFT: LEFT
 }
 
+DIRECTION2STR = {
+    STAY:  "STAY",
+    UP:    "UP",
+    RIGHT: "RIGHT",
+    DOWN:  "DOWN",
+    LEFT:  "LEFT"
+}
+
 
 """
 colors: dict

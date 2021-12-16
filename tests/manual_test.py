@@ -7,9 +7,9 @@ if __name__=="__main__":
         "grid_size": (9,9),
         "pixel_density": 1,
         "targ_range": (1,4),
-        "harsh": False,
+        "harsh": True,
     }
-    env = gym.make("gordongames-v0", **args)
+    env = gym.make("gordongames-v1", **args)
 
     done = False
     rew = 0

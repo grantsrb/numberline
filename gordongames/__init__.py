@@ -4,10 +4,10 @@ register(
     id='gordongames-v0',
     entry_point='gordongames.envs:EvenLineMatch',
 )
-#register(
-#    id='gordongames-B',
-#    entry_point='gordongames.envs:ClusterMatch',
-#)
+register(
+    id='gordongames-v1',
+    entry_point='gordongames.envs:ClusterMatch',
+)
 #register(
 #    id='gordongames-C',
 #    entry_point='gordongames.envs:OrthoLineMatch',

@@ -418,6 +418,29 @@ class Register:
         """
         return self.grid.is_playable(coord)
 
+    def is_overlapped(self, coord):
+        """
+        Checks if the argued coordinate has two or more GameObjects
+        other than the player object. THE PLAYER OBJECT IS IGNORED!!!
+
+        A SPACE IS NOT CONSIDERED TO OVERLAP IF THE PLAYER OCCUPIES IT
+        WITH ANOTHER OBJECT!! THE PLAYER DOES NOT COUNT IN THIS
+        FUNCTION!!
+
+        Args:
+            coord: tuple in grid units (row, col)
+        Returns:
+            is_overlapping: bool
+                if true, multiple GameObjects other than the player
+                object reside in this space
+        """
+        coord = tuple(coord)
+        if not self.is_playable(coord): return False
+        objs = self.coord_register[coord]
+        if len(objs) > 2: return True
+        elif self.player not in objs and len(objs) > 1: return True
+        return False
+
     def delete_obj(self, game_object: GameObject):
         """
         Deletes the object from the registries and the grid

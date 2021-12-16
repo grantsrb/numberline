@@ -125,7 +125,11 @@ def get_aligned_items(items: set, targs: set, min_row: int=1):
             while sitting on the row with the maximum number of
             aligned items
     """
-    loners = get_unaligned_items(items, targs, min_row)
+    loners = get_unaligned_items(
+        items=items,
+        targs=targs,
+        min_row=min_row
+    )
     return items-loners
 
 def max_key(d):
