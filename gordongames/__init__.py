@@ -1,3 +1,4 @@
+import gordongames.oracles
 from gym.envs.registration import register
 
 register(

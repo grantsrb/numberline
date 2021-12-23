@@ -1,5 +1,5 @@
 import numpy as np
-from gordongames.envs.ggames.utils import nearest_obj, euc_distance, get_unaligned_items, get_aligned_items, get_rows_and_cols, get_row_and_col_counts
+from gordongames.envs.ggames.utils import nearest_obj, euc_distance, get_unaligned_items, get_aligned_items, get_rows_and_cols, get_row_and_col_counts, get_max_row
 from gordongames.envs.ggames.constants import *
 
 def get_even_line_goal_coord(player: object,
@@ -31,6 +31,31 @@ def get_even_line_goal_coord(player: object,
     if len(aligned_items) > 0:
         goal_row = next(iter(aligned_items)).coord[0]
     return (goal_row, goal_targ.coord[1])
+
+def find_empty_space_along_row(register, seed_coord):
+    """
+    Finds the nearest playable empty space along the row of the seed
+    coordinate.
+
+    Args:
+        register: Register
+        seed_coord: tuple of ints (row, col) in grid units
+    Returns:
+        coord:
+            the nearest empty space along the seed row
+    """
+    grid = register.grid
+    row, seed_col = seed_coord
+    try_col = seed_col
+    count = -1
+    while not register.is_empty((row,try_col)):
+        count+=1
+        half = count//2
+        if count % 2 == 0: try_col = seed_col + half
+        else: try_col = seed_col - half
+    coord = (row,try_col)
+    assert grid.col_inbounds(try_col) and register.is_empty(coord)
+    return coord
 
 def get_direction(coord0, coord1):
     """
@@ -134,7 +159,60 @@ def even_line_match(contr):
 def cluster_match(contr):
     """
     Takes a register and finds the optimal movement and grab action
-    for the state of the register in the cluster match game.
+    for the state of the register in the cluster match game. Also works
+    for cluster cluster match and orthogonal line match.
+
+    Args:
+        contr: Controller
+    Returns:
+        direction: int
+            a directional movement
+        grab: int
+            whether or not to grab
+    """
+    register = contr.register
+    player = register.player
+    items = register.items
+    n_targs = register.n_targs
+
+    min_row = 2
+    max_row, n_aligned = get_max_row(
+        items,
+        min_row=min_row,
+        ret_count=True
+    )
+    unaligned = set(filter(lambda x: x.coord[0]!=max_row, items))
+    # check if two objects are ontop of eachother (excluding player)
+    is_overlapping = register.is_overlapped(player.coord)
+    if is_overlapping:
+        grab_obj = nearest_obj(player, items)
+    elif n_aligned == n_targs and len(unaligned) == 0:
+        grab_obj = register.button
+    elif len(unaligned)>0:
+        grab_obj = nearest_obj(player, unaligned)
+    else:
+        grab_obj = register.pile
+
+    if player.coord==grab_obj.coord: grab = True
+    else: grab = False
+
+    if not grab:
+        goal_coord = grab_obj.coord
+    else: # Either on pile or unaligned object
+        goal_row = max_row if max_row is not None else 2
+        temp_col = register.grid.shape[1]//2
+        seed_coord = (goal_row, player.coord[1])
+        goal_coord = find_empty_space_along_row(
+            register=register,
+            seed_coord=seed_coord
+        )
+    direction = get_direction(player.coord, goal_coord)
+    return direction, grab
+
+def rev_cluster_match(contr):
+    """
+    Takes a register and finds the optimal movement and grab action
+    for the state of the register in the reverse cluster match game.
 
     Args:
         contr: Controller
@@ -152,6 +230,7 @@ def cluster_match(contr):
     # used later to determine if all items are aligned
     aligned_items = get_aligned_items(items, targs, min_row=0)
 
+    # check if two objects are ontop of eachother (excluding player)
     is_overlapping = register.is_overlapped(player.coord)
     if len(items) == len(targs) and not is_overlapping:
         if len(targs) == 1 or len(aligned_items)!=len(targs):
@@ -159,10 +238,8 @@ def cluster_match(contr):
         else: # len(aligned_items) == len(targs)
             # need to unalign an item
             grab_obj = nearest_obj(player, aligned_items)
-    elif len(items) >= len(targs):
+    elif len(items) >= len(targs) or is_overlapping:
         grab_obj = nearest_obj(player, items) # grab existing item
-    elif is_overlapping:
-        grab_obj = nearest_obj(player, items)
     else:
         grab_obj = register.pile
 
