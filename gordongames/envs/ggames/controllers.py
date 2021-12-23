@@ -1,7 +1,7 @@
 from gordongames.envs.ggames.grid import Grid
 from gordongames.envs.ggames.registry import Register
 from gordongames.envs.ggames.constants import *
-from gordongames.envs.ggames.utils import get_rows_and_cols, get_aligned_items
+from gordongames.envs.ggames.utils import get_rows_and_cols, get_aligned_items, get_max_row
 import numpy as np
 
 """
@@ -222,7 +222,68 @@ class EvenLineMatchController(Controller):
 
 class ClusterMatchController(EvenLineMatchController):
     """
-    This class creates an instance of a Cluster Line Match game.
+    This class creates an instance of the Cluster Line Match game.
+
+    The agent must place the same number of items as targets along a
+    single row. The targets are randomly distributed about the grid.
+    """
+    def reset(self, n_targs=None):
+        """
+        This function should be called everytime the environment starts
+        a new episode.
+        """
+        if n_targs is None:
+            low, high = self.targ_range
+            n_targs = np.random.randint(low, high+1)
+        # wipes items from grid and makes/deletes targs
+        self.register.reset(n_targs)
+        # randomizes object placement on grid
+        self.register.cluster_match()
+        return self.grid.grid
+
+    def calculate_reward(self, harsh: bool=False):
+        """
+        Determines what reward to return. In this case, checks if
+        the same number of items exists as targets and checks that
+        all items are along a single row.
+        
+        Args:
+            harsh: bool
+                if true, the function returns a reward of 1 when the
+                same number of items exists as targs and the items are
+                aligned along a single row. A -1 is returned otherwise.
+                If harsh is false, the function returns a partial
+                reward based on the number of aligned items minus the
+                number of items over the target count.
+
+                harsh == False:
+                    rew = (n_targ - abs(n_items-n_targs))/n_targs
+                    rew -= abs(n_aligned_items-n_items)/n_targs
+                harsh == True:
+                    rew = +1 when n_items == n_targs and n_aligned == n_targs
+                    rew = 0 when n_items == n_targs and n_aligned != n_targs
+                    rew = -1 otherwise
+        Returns:
+            rew: float
+                the calculated reward
+        """
+        targs = self.register.targs
+        items = self.register.items
+        max_row, n_aligned = get_max_row(items,min_row=1,ret_count=True)
+        n_targs = len(targs)
+        n_items = len(items)
+        if harsh:
+            if n_items == n_targs: return int(n_aligned == n_targs)
+            else: return -1
+        else:
+            rew = (n_targs - np.abs(n_items-n_targs))/n_targs
+            rew -= np.abs(n_aligned-n_items)/n_targs
+            return rew
+
+class ReverseClusterMatchController(EvenLineMatchController):
+    """
+    This class creates an instance of the inverse of a Cluster Line
+    Match game. The agent and targets are reversed.
 
     The agent must place a cluster of items matching the number of
     target objects. The items must not be all in a single row and
@@ -279,6 +340,44 @@ class ClusterMatchController(EvenLineMatchController):
             else: return 1 # n_targs==n_items and n_aligned != n_targs
         return (n_targs - np.abs(n_items-n_targs))/n_targs
 
+class ClusterClusterMatchController(EvenLineMatchController):
+    """
+    Creates a game in which the user attempts to place the same
+    number of items on the grid as the number of target objects.
+    The target objects are randomly placed and no structure is imposed
+    on the placement of the user's items.
+    """
+    def calculate_reward(self, harsh: bool=False):
+        """
+        Determines what reward to return. In this case, checks if
+        the same number of items exists as targets.
+        
+        Args:
+            harsh: bool
+                if true, the function returns a reward of 1 when the
+                same number of items exists as targs. -1 otherwise.
+
+                If harsh is false, the function returns a partial
+                reward based on the difference of the number of items
+                to targs divided by the number of targs.
+
+                harsh == False:
+                    rew = (n_targ - abs(n_items-n_targs))/n_targs
+                harsh == True:
+                    rew = +1 when n_items == n_targs
+                    rew = -1 otherwise
+        Returns:
+            rew: float
+                the calculated reward
+        """
+        targs = self.register.targs
+        items = self.register.items
+        n_targs = len(targs)
+        n_items = len(items)
+        if harsh:
+            return -1 + 2*int(n_targs == n_items)
+        return (n_targs - np.abs(n_items-n_targs))/n_targs
+
 class UnevenLineMatchController(EvenLineMatchController):
     """
     This class creates an instance of an Uneven Line Match game.
@@ -300,7 +399,7 @@ class UnevenLineMatchController(EvenLineMatchController):
         self.register.uneven_line_match()
         return self.grid.grid
 
-class OrthogonalLineMatchController(EvenLineMatchController):
+class OrthogonalLineMatchController(ClusterMatchController):
     """
     This class creates an instance of an Orthogonal Line Match game.
 
@@ -308,71 +407,18 @@ class OrthogonalLineMatchController(EvenLineMatchController):
     must be aligned vertically and evenly spaced by 0 if the targs are
     spaced by 0 or items must be spaced by 1 otherwise.
     """
-    def calculate_reward(self, harsh: bool=False):
+    def reset(self, n_targs=None):
         """
-        Determines what reward to return. In this case, checks if
-        the same number of items exists as targets and checks that
-        all items are evenly spaced along a single column. If the targs
-        are spaced by 0, the items should be spaced by 0. Otherwise the
-        items should be spaced by 1.
-
-        Args:
-            harsh: bool
-                if true, the function returns a reward of 1 when the
-                same number of items exists as targs and the items are
-                aligned in a single column, properly spaced. 0
-                otherwise.
-                If harsh is false, the function returns a partial
-                reward based on the difference of the number of items
-                to targs divided by the number of targs. Extraneous
-                spaces and items are subtracted from the reward when
-                harsh is False
-
-                harsh == False:
-                    rew = (n_targ - abs(n_items-n_targs))/n_targs - n_extra
-                harsh == True:
-                    rew = n_items == n_targs
-        Returns:
-            rew: float
-                the calculated reward
+        This function should be called everytime the environment starts
+        a new episode.
         """
-        targs = self.register.targs
-        items = self.register.items
-        n_targs = len(targs)
-        n_items = len(items)
-        if harsh and n_targs != n_items: return -1
-        _, item_cols = get_rows_and_cols(items)
-        item_rows = sorted([i.coord[0] for i in items])
-        targ_cols = sorted([t.coord[1] for t in targs])
-        targ_spacing = min((targ_cols[1]-targ_cols[0])-1, 1)
+        if n_targs is None:
+            low, high = self.targ_range
+            n_targs = np.random.randint(low, high+1)
+        # wipes items from grid and makes/deletes targs
+        self.register.reset(n_targs)
+        # randomizes object placement on grid
+        self.register.orthogonal_line_match()
+        return self.grid.grid
 
-        count_error = 1-np.abs(n_items-n_targs)/n_targs
-        spacing_error = self.calc_spacing_error(item_rows,targ_spacing)
-        col_error = len(item_cols) - 1
-        if harsh:
-            if col_error > 0 or spacing_error > 0: return -1
-            return 1
-        return count_error - spacing_error - col_error
-
-    def calc_spacing_error(self, arr: list, targ_spacing: int):
-        """
-        Calculates the total amount of misspacing. If the distance
-        between two adjoined values is not equal to targ_spacing, the
-        value is added to the total error.
-
-        Args:
-            arr: sorted list of ints in ascending order
-            targ_spacing: int
-                any distances between arr[i+1] and arr[i] are compared
-                to this value. If different, 1 is added to the error.
-        Returns:
-            error: int
-                the number of misspaced values in the array
-        """
-        error = 0
-        for i in range(len(arr)-1):
-            er = int((arr[i+1]-arr[i])!=targ_spacing)
-            error += er
-        return error
-        
 

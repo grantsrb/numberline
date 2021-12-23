@@ -2,7 +2,8 @@ import os, subprocess, time, signal
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
-from gordongames.envs.ggames import Discrete, EvenLineMatchController, ClusterMatchController
+from gordongames.envs.ggames import Discrete
+from gordongames.envs.ggames.controllers import *
 from gordongames.envs.ggames.constants import STAY
 import numpy as np
 
@@ -156,8 +157,9 @@ class ClusterMatch(GordonGame):
     """
     Creates a gym version of Peter Gordon's Cluster Matching game.
     The user attempts to place the same number of items on the grid as
-    the number of target objects. The clustered items must not align
-    perfectly with the target objects.
+    the number of target objects. The target objects are randomly
+    placed while the agent attempts to align the placed items along a
+    single row.
 
     The number of steps is based on the size of the grid and the number
     of target objects on the grid. The maximum step count is enough so
@@ -167,6 +169,90 @@ class ClusterMatch(GordonGame):
     """
     def set_controller(self):
         self.controller = ClusterMatchController(
+            grid_size=self.grid_size,
+            pixel_density=self.pixel_density,
+            harsh=self.harsh,
+            targ_range=self.targ_range
+        )
+        self.controller.reset()
+
+class OrthogonalLineMatch(GordonGame):
+    """
+    Creates a gym version of Peter Gordon's Orthogonal Line Matching
+    game.  The user attempts to layout a number of items in a horizontal
+    line to match the count of a number of target objects laying in a
+    vertical line. It must do so within a maximum number of steps
+    based on the size of the grid and the number of target objects on
+    the grid. The maximum step count is enough so that the agent can
+    walk around the perimeter of the playable area n_targs+1 number of
+    times. The optimal policy will always be able to finish well
+    before this.
+    """
+    def set_controller(self):
+        self.controller = OrthogonalLineMatchController(
+            grid_size=self.grid_size,
+            pixel_density=self.pixel_density,
+            harsh=self.harsh,
+            targ_range=self.targ_range
+        )
+        self.controller.reset()
+
+class UnevenLineMatch(GordonGame):
+    """
+    Creates a gym version of Peter Gordon's Uneven Line Matching game.
+    The user attempts to match the target object line within a maximum
+    number of steps based on the size of the grid and the number of
+    target objects on the grid. The maximum step count is enough so
+    that the agent can walk around the perimeter of the playable area
+    n_targs+1 number of times. The optimal policy will always be able
+    to finish well before this.
+    """
+    def set_controller(self):
+        self.controller = UnevenLineMatchController(
+            grid_size=self.grid_size,
+            pixel_density=self.pixel_density,
+            harsh=self.harsh,
+            targ_range=self.targ_range
+        )
+        self.controller.reset()
+
+class ReverseClusterMatch(GordonGame):
+    """
+    Creates a gym version of the reverse of Peter Gordon's Cluster
+    Matching game. The user attempts to place the same number of items
+    on the grid as the number of evenly spaced, aligned target objects.
+    The placed items must not align with the target objects.
+
+    The number of steps is based on the size of the grid and the number
+    of target objects on the grid. The maximum step count is enough so
+    that the agent can walk around the perimeter of the playable area
+    n_targs+1 number of times. The optimal policy will always be able
+    to finish well before this.
+    """
+    def set_controller(self):
+        self.controller = ReverseClusterMatchController(
+            grid_size=self.grid_size,
+            pixel_density=self.pixel_density,
+            harsh=self.harsh,
+            targ_range=self.targ_range
+        )
+        self.controller.reset()
+
+class ClusterClusterMatch(GordonGame):
+    """
+    Creates a gym game in which the user attempts to place the same
+    number of items on the grid as the number of target objects.
+    The target objects are randomly placed and no structure is imposed
+    on the placement of the user's items.
+
+    The number of steps is based on the size of the grid and the number
+    of target objects on the grid. The maximum step count is enough so
+    that the agent can walk around the perimeter of the playable area
+    n_targs+1 number of times. The optimal policy will always be able
+    to finish well before this.
+    """
+    def set_controller(self):
+        self.controller = ClusterClusterMatchController(
             grid_size=self.grid_size,
             pixel_density=self.pixel_density,
             harsh=self.harsh,

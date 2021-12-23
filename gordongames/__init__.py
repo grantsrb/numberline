@@ -8,19 +8,19 @@ register(
     id='gordongames-v1',
     entry_point='gordongames.envs:ClusterMatch',
 )
-#register(
-#    id='gordongames-C',
-#    entry_point='gordongames.envs:OrthoLineMatch',
-#)
-#register(
-#    id='gordongames-D',
-#    entry_point='gordongames.envs:UnevenLineMatch',
-#)
-#register(
-#    id='gordongames-G',
-#    entry_point='gordongames.envs:NutsInCan',
-#)
-#register(
-#    id='gordongames-H',
-#    entry_point='gordongames.envs:CandyInBox',
-#)
+register(
+    id='gordongames-v2',
+    entry_point='gordongames.envs:OrthogonalLineMatch',
+)
+register(
+    id='gordongames-v3',
+    entry_point='gordongames.envs:UnevenLineMatch',
+)
+register(
+    id='gordongames-v5',
+    entry_point='gordongames.envs:ReverseClusterMatch',
+)
+register(
+    id='gordongames-v6',
+    entry_point='gordongames.envs:ClusterClusterMatch',
+)

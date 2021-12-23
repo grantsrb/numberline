@@ -351,3 +351,19 @@ class Grid:
         if self.is_divided: return self.is_inhalfbounds(coord)
         return self.is_inbounds(coord)
 
+    def is_below_divider(self, coord):
+        """
+        Takes a coord and determines if it is within the divided
+        boundaries of the grid if the grid is divided, or simply
+        within the boundaries of the grid if the grid is not divided.
+
+        Args:
+          coord: list like (row, col)
+            the coordinate in grid units
+        """
+        row, col = coord
+        if self.is_divided:
+            row_inbounds = row > self.middle_row and row < self.shape[0]
+            return row_inbounds and self.col_inbounds(col)
+        return self.is_inbounds(coord)
+

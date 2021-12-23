@@ -65,6 +65,34 @@ def get_coord_counts(objs: set):
         counts[obj.coord] += 1
     return counts
 
+def get_max_row(objs: set, min_row: int=None, ret_count: bool=False):
+    """
+    Finds the row in which the majority of objects reside. Returns the
+    earliest row in case of equal counts.
+
+    Args:
+        objs: set of GameObjects
+        min_row: int or None (inclusive)
+            determines the minimum row available for counting. if None
+            all rows are available.
+        ret_count: bool
+            if true, returns the count associated with the max row
+    Returns:
+        max_row: int
+            the index of the row with the largest number of objects.
+        count: int
+            the count of the items along the max_row
+    """
+    rows, _ = get_row_and_col_counts(objs)
+    if min_row is not None:
+        for i in range(min_row):
+            if i in rows: del rows[i]
+    max_row = max_key(rows)
+    if ret_count:
+        if max_row in rows: return max_row, rows[max_row]
+        else: return max_row, 0
+    return max_row
+
 def get_unaligned_items(items: set, targs: set, min_row: int=2):
     """
     Returns all items that are not aligned along the majority
@@ -87,11 +115,7 @@ def get_unaligned_items(items: set, targs: set, min_row: int=2):
             maximum number of target aligned items
     """
     coord_counts = get_coord_counts(items)
-    item_rows, _ = get_row_and_col_counts(items)
-    if min_row is not None:
-        for i in range(min_row):
-            if i in item_rows: del item_rows[i]
-    max_row = max_key(item_rows)
+    max_row = get_max_row(items, min_row=min_row)
     _, targ_cols = get_rows_and_cols(targs)
 
     loners = set()
@@ -140,7 +164,8 @@ def max_key(d):
     Args:
         d: dict
     Returns:
-        k: key
+        k: key or None
+            if no rows have any items, returns None
     """
     max_count = 0
     m_key = None

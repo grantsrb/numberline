@@ -344,7 +344,6 @@ class Register:
                     return FULL
         return STEP
 
-
     def find_space(self, coord):
         """
         Searches around the argued coord for a coordinate that is
@@ -406,7 +405,7 @@ class Register:
             coord: tuple in grid units (row, col)
         """
         coord = tuple(coord)
-        if not self.is_playable(coord): return False
+        if not self.grid.is_inbounds(coord): return False
         objs = self.coord_register[coord]
         if len(objs) == 0: return True
         elif len(objs) == 1 and self.player in objs: return True
@@ -417,6 +416,15 @@ class Register:
         Determines if the coord is within playable bounds of the grid
         """
         return self.grid.is_playable(coord)
+
+    def is_targ_space(self, coord):
+        """
+        Determines if the coord is within the space alotted for targets.
+        If the grid is not divided, this means anywhere is fair game.
+        If the grid is divided, then only the spaces below the middle
+        line return true.
+        """
+        return self.grid.is_below_divider(coord)
 
     def is_overlapped(self, coord):
         """
@@ -668,6 +676,24 @@ class Register:
         self.move_object(self.button, (0, int(cols[1])))
         self.move_object(self.player, (0, int(cols[2])))
 
+    def rand_targ_placement(self):
+        """
+        Places the targets randomly on the grid.
+        """
+        coords = {(0,0)}
+        if self.grid.is_divided: low = self.grid.middle_row+1
+        else: low = 0
+        high = self.grid.shape[0]
+        assert self.n_targs < (high-low)*self.grid.shape[1]
+        for targ in self.targs:
+            coord = (0,0)
+            while not self.is_empty(coord) or coord in coords:
+                row = np.random.randint(low, high)
+                col = np.random.randint(0, self.grid.shape[1])
+                coord = (row, col)
+            coords.add(coord)
+            self.move_object(targ, coord=coord)
+
     def even_targ_spacing(self):
         """
         Evenly spaces the targets by a random amount and places them
@@ -725,6 +751,36 @@ class Register:
             coord = (row, start_col)
             self.move_object(targ, coord=coord)
 
+    def vertical_targ_spacing(self):
+        """
+        Evenly spaces the targets by a random amount and places them
+        along a random column (below the divider) beginning at a random
+        row.
+        """
+        col = np.random.randint(
+            0,
+            self.grid.shape[1]
+        )
+        if self.grid.is_divided:
+            space = self.grid.shape[0] - self.grid.middle_row - 1
+            start_row = self.grid.middle_row + 1
+        else:
+            space = self.grid.shape[0]
+            start_row = 0
+        avail_row_space = space - self.n_targs
+        max_spacing = avail_row_space//max(self.n_targs-1, 1)
+        space_between = 0
+        if max_spacing > 0:
+            space_between = np.random.randint(0,max_spacing)
+
+        taken_space = self.n_targs + space_between*(self.n_targs-1)
+        space_avail = space-taken_space
+        start_row = start_row + np.random.randint(0,space_avail+1)
+        for i,targ in enumerate(self._targs):
+            row = start_row + i*(space_between+1)
+            coord = (row, col)
+            self.move_object(targ, coord=coord)
+
     def even_line_match(self):
         """
         Initialization function for the line match game A.
@@ -737,14 +793,16 @@ class Register:
         self.even_targ_spacing()
         self.draw_register()
 
-    def cluster_line_match(self):
+    def cluster_match(self):
         """
-        Intialization function for the Cluster Line Match game B.
+        Intialization function for the Cluster Match game B.
 
         The agent must match the number of target objects without
         aligning them.
         """
-        self.line_match()
+        self.rand_pile_button_player() 
+        self.rand_targ_placement()
+        self.draw_register()
 
     def orthogonal_line_match(self):
         """
@@ -753,7 +811,9 @@ class Register:
         The agent must evenly space an item for each target along a
         single column.
         """
-        self.line_match()
+        self.rand_pile_button_player()
+        self.vertical_targ_spacing()
+        self.draw_register()
 
     def uneven_line_match(self):
         """
@@ -764,4 +824,5 @@ class Register:
         """
         self.rand_pile_button_player()
         self.uneven_targ_spacing()
+        self.draw_register()
 

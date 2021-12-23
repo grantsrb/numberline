@@ -35,7 +35,7 @@ if __name__=="__main__":
         "pixel_density": 4,
         "harsh": True,
     }
-    env_name = "gordongames-v0"
+    env_name = "gordongames-v1"
     env = gym.make(env_name, **kwargs)
     oracle = GordonOracle(env_name)
     for i in range(10):
