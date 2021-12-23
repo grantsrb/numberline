@@ -340,7 +340,7 @@ class ReverseClusterMatchController(EvenLineMatchController):
             else: return 1 # n_targs==n_items and n_aligned != n_targs
         return (n_targs - np.abs(n_items-n_targs))/n_targs
 
-class ClusterClusterMatchController(EvenLineMatchController):
+class ClusterClusterMatchController(ClusterMatchController):
     """
     Creates a game in which the user attempts to place the same
     number of items on the grid as the number of target objects.
