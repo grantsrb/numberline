@@ -42,6 +42,9 @@ class GameObject:
     def color(self):
         return self._color
 
+    def __str__(self):
+        return self.type
+
 class Register:
     """
     The register tracks the coordinates of all objects within the game.

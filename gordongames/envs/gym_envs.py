@@ -4,7 +4,7 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 from gordongames.envs.ggames import Discrete
 from gordongames.envs.ggames.controllers import *
-from gordongames.envs.ggames.constants import STAY
+from gordongames.envs.ggames.constants import STAY, ITEM, TARG, PLAYER, PILE, BUTTON
 import numpy as np
 
 try:
@@ -105,11 +105,47 @@ class GordonGame(gym.Env):
             direction,
             int(grab)
         )
+        player = self.controller.register.player
+        info["player_grab"] = str(self.get_other_obj(player, grab))
         if self.step_count > self.max_steps: done = True
         elif self.step_count == self.max_steps and rew == 0:
             rew = self.controller.max_punishment
             done = True
         return self.last_obs, rew, done, info
+
+    def get_other_obj(self, obj, grab):
+        """
+        Finds and returns the first game object that is not the argued
+        object and is located at the location of the argued object. 
+
+        Args:
+            obj: GameObject
+            grab: bool
+                the player's current grab state
+        Returns:
+            other_obj: GameObject or None
+                one of the other objects located at this location.
+                The priority goes by type:
+                    Item
+                    Player
+                    Target
+                    Pile
+                    Button
+        """
+        if not grab: return None
+        reg = self.controller.register.coord_register
+        objs = {*reg[obj.coord]}
+        if len(objs) == 1: return None
+        objs.remove(obj)
+        order = [ITEM, PLAYER, TARG, PILE, BUTTON]
+        memo = {o: set() for o in order}
+        # Sort objects
+        for o in objs:
+            memo[o.type].add(o)
+        # return single object by priority
+        for o in order:
+            if len(memo[o]) > 0: return memo[o].pop()
+        return None
 
     def reset(self, n_targs=None):
         self.controller.reset(n_targs=n_targs)
