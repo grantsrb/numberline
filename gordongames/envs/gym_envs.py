@@ -106,7 +106,7 @@ class GordonGame(gym.Env):
             int(grab)
         )
         player = self.controller.register.player
-        info["player_grab"] = str(self.get_other_obj(player, grab))
+        info["grab"] = str(self.get_other_obj(player, grab))
         if self.step_count > self.max_steps: done = True
         elif self.step_count == self.max_steps and rew == 0:
             rew = self.controller.max_punishment
