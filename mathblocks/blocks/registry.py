@@ -1,7 +1,7 @@
-from gordongames.envs.ggames.grid import Grid
+from mathblocks.blocks.grid import Grid
+from mathblocks.blocks.constants import PLAYER, TARG, PILE, ITEM, DIVIDER, BUTTON, BUTTON_PRESS, OBJECT_TYPES, STAY, UP, RIGHT, DOWN, LEFT, DIRECTIONS, COLORS, EVENTS, STEP, FULL, DEFAULT
 import math
 import numpy as np
-from gordongames.envs.ggames.constants import PLAYER, TARG, PILE, ITEM, DIVIDER, BUTTON, BUTTON_PRESS, OBJECT_TYPES, STAY, UP, RIGHT, DOWN, LEFT, DIRECTIONS, COLORS, EVENTS, STEP, FULL, DEFAULT
 
 class GameObject:
     """

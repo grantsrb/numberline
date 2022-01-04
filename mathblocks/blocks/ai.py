@@ -1,6 +1,6 @@
 import numpy as np
-from gordongames.envs.ggames.utils import nearest_obj, euc_distance, get_unaligned_items, get_aligned_items, get_rows_and_cols, get_row_and_col_counts, get_max_row
-from gordongames.envs.ggames.constants import *
+from mathblocks.blocks.utils import nearest_obj, euc_distance, get_unaligned_items, get_aligned_items, get_rows_and_cols, get_row_and_col_counts, get_max_row
+from mathblocks.blocks.constants import *
 
 def get_even_line_goal_coord(player: object,
                              aligned_items: set,

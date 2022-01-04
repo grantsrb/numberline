@@ -1,7 +1,9 @@
-# Gordon Games
+# Math Blocks
 
 ## Description
-gordongames is a gym environment for recreating computational versions of games proposed in Peter Gordon's paper [_Numerical Cognition Without Words: Evidence from Amazonia_](https://www.science.org/doi/10.1126/science.1094492). 
+Math blocks is a game in which simple arithmetic mathematical questions are posed and answered visually. The objects within the game consist of rectangles of varying sizes and colors. Each size-color combination is meant to represent one of the numbers 1, 5, 10, 50, 100, or 500. The agent has the ability to create new blocks and stack existing blocks to convert them to a larger block size.
+
+Questions are posed visually at the bottom of the screen using a group of blocks A and another group of blocks B with a symbol between them representing addition, multiplication, or subtraction (negative solutions are not allowed). The agent must produce the appropriate representative quantity using the counting blocks to solve the equation. Once the agent believes it has found the solution, it presses a button to end the game.
 
 ## Dependencies
 - python3
@@ -14,8 +16,8 @@ gordongames is a gym environment for recreating computational versions of games 
 1. Clone this repository
 2. Navigate to the cloned repository
 3. Run command `$ pip install -e ./`
-4. add `import gordongames` to the top of your python script
-5. make one of the envs with the folowing: `env = gym.make("gordongames-<version here>")`
+4. add `import mathblocks` to the top of your python script
+5. make one of the envs with the folowing: `env = gym.make("mathblocks-<version here>")`
 
 ## Rendering
 A common error about matplotlib using `agg` can be fixed by including the following lines in your scripts before calling `.render()`:
@@ -29,93 +31,14 @@ If you are experiencing trouble using the `render()` function while using jupyte
 
 before calling `render()`.
 
-## Using gordongames
-After installation, you can use gordongames by making one of the gym environments. See the paper [_Numerical Cognition Without Words: Evidence from Amazonia_](https://www.science.org/doi/10.1126/science.1094492) for more details about each game.
+## Rewards
+A negative reward representing the squared error between the appropriate numerical representation of the solution and the agent's actual numerical representation of the solution to the visual equation.
 
-#### Environment v0 Even Line Match
-Use `gym.make('gordongames-v0')` to create the Line Match game. The agent must match the number of target objects by aligning them within the target columns. Targets are evenly spaced. These are the default options for the game (see Game Details to understand what each variable does):
+## Game Options
 
-    grid_size = [33,33]
-    pixel_density = 1
-    targ_range = (1,10)
-
-#### Environment v1 Cluster Match
-Use `gym.make('gordongames-v1')` to create the Cluster Line Match game. The agent must match the number target objects, but the target objects are randomly distributed and the agent must align the items in a row. These are the default options for the game (see Game Details to understand what each variable does):
-
-    grid_size = [33,33]
-    pixel_density = 1
-    targ_range = (1,10)
-
-#### Environment v2 Orthogonal Line Match
-Use `gym.make('gordongames-v2')` to create the Orthogonal Line Match game. The agent must match the number of target objects, but the target objects are aligned vertically whereas the agent must align the items along a single row. These are the default options for the game (see Game Details to understand what each variable does):
-
-    grid_size = [33,33]
-    pixel_density = 1
-    targ_range = (1,10)
-
-#### Environment v3 Uneven Line Match
-Use `gym.make('gordongames-v3')` to create the Uneven Line Match game. The agent must match the target objects by aligning them along each respective target column. The targets are unevenly spaced. These are the default options for the game (see Game Details to understand what each variable does):
-
-    grid_size = [33,33]
-    pixel_density = 1
-    targ_range = (1,10)
-
-#### Environment v4 Nuts-In-Can (Not yet implemented)
-Use `gym.make('gordongames-v4')` to create the Nuts-In-Can game. The agent watches a number of target objects get placed into a pile. The agent must then remove the correct number of objects. These are the default options for the game (see Game Details to understand what each variable does):
-
-    grid_size = [33,33]
-    pixel_density = 1
-    targ_range = (1,10)
-
-#### Environment v5 Reverse Cluster Match
-Use `gym.make('gordongames-v5')` to create the Reverse Cluster Line Match game. The agent must match the number of target objects without aligning them. These are the default options for the game (see Game Details to understand what each variable does):
-
-    grid_size = [33,33]
-    pixel_density = 1
-    targ_range = (1,10)
-
-#### Environment v6 Cluster Cluster Match
-Use `gym.make('gordongames-v6')` to create the Cluster Cluster Match game. The target objects are distributed randomly. The agent must simply match the number of target objects with no structure imposed. These are the default options for the game (see Game Details to understand what each variable does):
-
-    grid_size = [33,33]
-    pixel_density = 1
-    targ_range = (1,10)
-
-
-## Game Details
-Each game consists of a randomly intitialized grid with various objects distributed on the grid depending on the game type. The goal is for the agent to first complete some task and then press the end button located in the upper right corner of the grid. Episodes last until the agent presses the end button. The agent can move left, up, right, down, or stay still. The agent also has the ability to interact with objects via the grab action. Grab only acts on objects in the same square as the agent. If the object is an "item", the agent carries the item to wherever it moves on that step. If the object is a "pile", a new item is created and carried with the agent for that step. The ending button is pressed using the grab action. The reward is only granted at the end of each episode if the task was completed successfully.
-
-#### Rewards
-A +1 reward is returned only in the event of a successful completion of the task.
-
-A -1 reward is returned when a task ends unsuccessfully.
-
-##### Environment v0
-The agent receives a +1 reward if each target has a single item located in its column at the end of the episode.
-
-##### Environment v1
-The agent receives a +1 reward if there exists a single item for each target. The agent must align the items along a single row.
-
-##### Environment v2
-The agent receives a +1 reward if there exists an item for each target. All items must be aligned along a single row.
-
-##### Environment v3
-The agent receives a +1 reward if each target has a single item located in its column at the end of the episode.
-
-##### Environment v4
-The agent receives a +1 reward if the agent removes the exact number of items placed in the pile.
-
-##### Environment v5
-The agent receives a +1 reward if there exists an item for each target. All items must not be aligned with the target objects.
-
-##### Environment v6
-The agent receives a +1 reward if there exists an item for each target.
-
-#### Game Options
-
-- _grid_size_ - An row,col coordinate denoting the number of units on the grid (height, width).
-- _pixel_density_ - Number of numpy pixels within a single grid unit.
-- _targ_range_ - A range of possible initial target object counts for each game (inclusive). Must be less than `grid_size`. 
+- _grid_size_: An row,col coordinate denoting the number of units on the grid (height, width).
+- _pixel_density_: Number of numpy pixels within a single grid unit.
+- _targ_range_: A range of possible target solution counts for each game (inclusive). The maximum must be less than half of the area of the grid.
 
 Each of these options are member variables of the environment and will come into effect after the environment is reset. For example, if you wanted to use 1-5 targets in game A, you can be set this using the following code:
 
@@ -123,9 +46,33 @@ Each of these options are member variables of the environment and will come into
     env.targ_range = (1,5)
     observation = env.reset()
 
+## Code Details
+### Grid
+The grid handles creating the canvas for the game. It handles any interface with the actual image being produced by the game. Use it to draw blocks to the image. Coordinates are drawn using a (Row,Col) coordinate system in which row indexes start at the top of the image just like an array. For example, the upper leftmost pixel is (0,0) and the lower right most pixel is (NRows-1, NCols-1). The upper-most row of the image and two colums in from the left would correspond to (0,1).
 
-#### Environment Parameter Examples
-Examples coming soon!
+### GameObject
+Each visual on the screen is defined by a GameObject object. It holds the type of object, the corresponding color, and the corresponding shape.
 
-#### About the Code
-Coming soon!
+#### GameObject Types:
+- Player: an object to represent the player's location
+- Operator: an object to represent a mathematical operation
+- Button: an object that is pressed when the player wishes to end the episode
+- Block1: a block representing 1 unit
+- Block5: a block representing 5 units
+- Block10: a block representing 10 units
+- Block50: a block representing 50 units
+- Block100: a block representing 100 units
+- Block500: a block representing 500 units
+- Block1Pile: an object representing the location to create a new block representing 1 unit
+- Block5Pile: an object representing the location to create a new block representing 5 units
+- Block10Pile: an object representing the location to create a new block representing 10 units
+- Block50Pile: an object representing the location to create a new block representing 50 units
+- Block100Pile: an object representing the location to create a new block representing 100 units
+- Block500Pile: an object representing the location to create a new block representing 500 units
+
+### Register
+The register tracks and updates all GameObjects and their locations. The register holds a dict mapping coordinates to a list of any residing GameObjects as well as a set that contains all GameObjects and a set for each type of GameObject that holds all of the corresponding objects. The register is used to translate, add, and remove all GameObjects from the game. The Register also holds a function to update the grid with the current state of all GameObjects. The register also handles coversions between different types of blocks. Conversions automatically occur when possible.
+
+### Controller
+Controllers handle all game logic. They handle initializing objects and any logic for moving objects and any reward functions for agent success.
+

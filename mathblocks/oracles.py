@@ -1,4 +1,4 @@
-import gordongames as gg
+import mathblocks as mb
 import numpy as np
 
 class Oracle:
@@ -28,23 +28,13 @@ class RandOracle(Oracle):
     def __call__(self, *args, **kwargs):
         return self.brain()
 
-class GordonOracle(Oracle):
+class CountingOracle(Oracle):
     def __init__(self, env_type, *args, **kwargs):
         self.env_type = env_type
         self.is_grabbing = False
         
-        if self.env_type == "gordongames-v0":
-            self.brain = gg.envs.ggames.ai.even_line_match
-        elif self.env_type == "gordongames-v1":
-            self.brain = gg.envs.ggames.ai.cluster_match
-        elif self.env_type == "gordongames-v2":
-            self.brain = gg.envs.ggames.ai.cluster_match
-        elif self.env_type == "gordongames-v3":
-            self.brain = gg.envs.ggames.ai.even_line_match
-        elif self.env_type == "gordongames-v5":
-            self.brain = gg.envs.ggames.ai.rev_cluster_match
-        elif self.env_type == "gordongames-v6":
-            self.brain = gg.envs.ggames.ai.rev_cluster_match
+        if self.env_type == "mathblocks-v0":
+            self.brain = mb.blocks.ai.counting
         else:
             raise NotImplemented
         print("brain:", type(self.brain))

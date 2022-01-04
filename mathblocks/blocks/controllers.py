@@ -1,7 +1,7 @@
-from gordongames.envs.ggames.grid import Grid
-from gordongames.envs.ggames.registry import Register
-from gordongames.envs.ggames.constants import *
-from gordongames.envs.ggames.utils import get_rows_and_cols, get_aligned_items, get_max_row
+from mathblocks.blocks.grid import Grid
+from mathblocks.blocks.registry import Register
+from mathblocks.blocks.constants import *
+from mathblocks.blocks.utils import get_rows_and_cols, get_aligned_items, get_max_row
 import numpy as np
 
 """
