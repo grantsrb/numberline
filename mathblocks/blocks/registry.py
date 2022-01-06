@@ -829,3 +829,161 @@ class Register:
         self.uneven_targ_spacing()
         self.draw_register()
 
+
+class CoordRegister:
+    """
+    This class assists in tracking what GameObjects are located at each
+    coordinate. The class holds a 2d array for each GameObject type.
+    For each GameObject of within a type, an integer is added to all
+    coordinates that are occupied by that GameObject.
+
+    Use the function `move_object(obj, new_coord)` to update the internal
+    representation.
+    """
+    def __init__(self, obj_types, grid_shape):
+        """
+        Args:
+            obj_types: set of str
+                each GameObject type that should be tracked
+            grid_shape: tuple (n_row, n_col)
+                the shape of the grid in grid units "grid.shape"
+        Members:
+            coord_maps: dict
+                this dict tracks where each object type lies on the
+                actual grid by adding a +1 to every location on the
+                corresponding ndarray
+
+                keys: str
+                    object types
+                vals: ndarray
+                    a map to track if an object of the corresponding
+                    type is located at that coordinate
+            hashmap: dict
+                the hashmap is a dict that maps coordinates to dicts
+                that map from object type strings to sets of the
+                corresponding objects that are touching that location.
+        """
+        self.coord_maps = {ot: np.zeros(grid_shape) for ot in obj_types}
+        self.hashmap = dict()
+        for row in range(grid_shape[0]):
+            for col in range(grid_shape[1]):
+                coord = (row,col)
+                self.hashmap[coord] = {ot: set() for ot in obj_types}
+
+    def __getitem__(self, key):
+        """
+        Args:
+            key: tuple of ints (Row, Col)
+                the coordinate location in grid units
+        Returns:
+            objs: set of GameObjects
+                all objects that are partially touching that location
+        """
+        return CoordSet(self, tuple(key))
+
+    def add(self, obj, coord=None):
+        """
+        Adds a new object to the hashmap
+
+        Args:
+            obj: GameObject
+            coord: tuple of ints (row, col) or None
+                if None, obj.coord is used instead
+        """
+        if coord is None: coord = obj.coord
+        coords = Grid.all_coords(coord, obj.size)
+        for c in coords:
+            if obj.type in self.hashmap[c]:
+                self.hashmap[c][obj.type].add(obj)
+            else:
+                self.hashmap[c][obj.type] = {obj}
+
+    def remove(self, obj, coord=None):
+        """
+        Removes an object from the hashmap
+
+        Args:
+            obj: GameObject
+            coord: tuple of ints (row, col) or None
+                if None, all possible coordinates are searched to
+                ensure the object is completely removed
+        """
+        if coord is None:
+            coords = self.hashmap.keys()
+        else:
+            coords = Grid.all_coords(coord, obj.size)
+        for c in coords:
+            if obj in self.hashmap[c][obj.type]:
+                self.hashmap[c][obj.type].remove(obj)
+
+    def move_object(self, obj, old_coord, new_coord):
+        """
+        Moves the GameObject from its current coordinate to the argued
+        new coord. Assumes the GameObject's current coordinate is
+        represented by its `coord` member variable.
+
+        Args:
+            obj: GameObject
+            old_coord: tuple of ints (row, col)
+                the old coordinate in grid units
+            new_coord: tuple of ints (row, col)
+                the new coordinate in grid units
+        """
+        # Collect coordinate sets
+        old_coords = Grid.all_coords(old_coord, obj.size)
+        new_coords = Grid.all_coords(new_coord, obj.size)
+        # The coordinates to delete the object from
+        del_coords = old_coords-new_coords
+        # The coordinates to add the object to
+        add_coords = new_coords-old_coords
+
+        for coord in del_coords:
+            if obj in self.hashmap[coord][obj.type]:
+                self.hashmap[coord][obj.type].remove(obj)
+        for coord in add_coords:
+            self.hashmap[coord][obj.type].add(obj)
+
+
+class CoordSet:
+    """
+    Acts as a helper class to the CoordRegister. This class is returned
+    when the CoordRegister is indexed. It enables the user to add and
+    remove items from the CoordRegister at this coordinate using this
+    class' API
+    """
+    def __init__(self, coord_register, coord):
+        """
+        Args:
+            coord_register: CoordRegister
+            coord: tuple of ints (row, col)
+                the coordinate that the user is interested in
+        """
+        self.register = coord_register
+        self.coord = coord
+
+    def __contains__(self, obj):
+        d = self.register.hashmap[coord]
+        if obj.type in d:
+            return obj in d[obj.type]
+        return False
+
+    def add(self, obj):
+        """
+        This function is used to quickly add items to the CoordRegister
+        at the coordinate that corresponds to this CoordSet
+
+        Args:
+            obj: GameObject
+        """
+        self.register.add(obj, self.coord)
+
+    def remove(self, obj):
+        """
+        This function is used to quickly remove GameObjects from the
+        CoordRegister at the coordinate that corresponds to this
+        CoordSet
+
+        Args:
+            obj: GameObject
+        """
+        self.register.remove(obj, self.coord)
