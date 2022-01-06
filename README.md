@@ -48,7 +48,11 @@ Each of these options are member variables of the environment and will come into
 
 ## Code Details
 ### Grid
-The grid handles creating the canvas for the game. It handles any interface with the actual image being produced by the game. Use it to draw blocks to the image. Coordinates are drawn using a (Row,Col) coordinate system in which row indexes start at the top of the image just like an array. For example, the upper leftmost pixel is (0,0) and the lower right most pixel is (NRows-1, NCols-1). The upper-most row of the image and two colums in from the left would correspond to (0,1).
+The grid handles creating the canvas for the game. It handles any interface with the actual image being produced by the game. Use it to draw blocks to the image.
+
+Coordinates are drawn using a (Row,Col) coordinate system in which row indexes start at the top of the image just like an array. For example, the upper leftmost pixel is (0,0) and the lower right most pixel is (NRows-1, NCols-1). The upper-most row of the image and two colums in from the left would correspond to (0,1).
+
+When drawing a GameObject, the object specifies a coordinate and a size and a color.
 
 ### GameObject
 Each visual on the screen is defined by a GameObject object. It holds the type of object, the corresponding color, and the corresponding shape.
