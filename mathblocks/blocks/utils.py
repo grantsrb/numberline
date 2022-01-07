@@ -207,3 +207,65 @@ def euc_distance(coord1, coord2):
     """
     return np.linalg.norm(np.asarray(coord1) - np.asarray(coord2))
 
+def coord_diff(coord0, coord1):
+    """
+    Returns the vector difference of coord0-coord1
+
+    Args:
+        coord1: sequence of ints (row, col)
+        coord2: sequence of ints (row, col)
+    Returns:
+        diff: sequence of ints (row, col)
+            coord0-coord1
+    """
+    return (coord0[0]-coord1[0], coord0[1]-coord1[1])
+
+def coord_add(coord0, coord1):
+    """
+    Returns the vector addition of coord0+coord1
+
+    Args:
+        coord1: sequence of ints (row, col)
+        coord2: sequence of ints (row, col)
+    Returns:
+        diff: sequence of ints (row, col)
+            coord0+coord1
+    """
+    return (coord0[0]+coord1[0], coord0[1]+coord1[1])
+
+def decompose(val, atoms):
+    """
+    Decomposes the argued value into the available atoms starting with
+    the biggest atom and continuing down the line.. For example, if
+    the atoms were [1,4,10] and the val was 7, the result would be
+    {4: 1, 1: 3} There is one 4 and three ones to make 7.
+
+    WARNING: in special circumstances it is possible to not get the
+    fewest number of atoms. For example, if the atoms are [1,7,10] and
+    the val is 14, this function will return one 10 and four 1s rather
+    than two 7s.
+
+    Args:
+        val: int
+        atoms: list of ints
+    Returns:
+        counts: dict
+            This dict maps the values of the atoms to the quantity
+            required to most efficiently represent the argued value.
+
+            keys: int
+                the value of the block
+            vals: int
+                the count of the block of this particular value
+    """
+    atoms = list(reversed(sorted(atoms)))
+    counts = {atom: 0 for atom in atoms}
+    remaining = val
+    for atom in atoms:
+        if remaining <= 0 or atom <= 0: break
+        count = remaining/atom
+        if int(count) == count: remaining = 0
+        else: remaining = remaining - int(count)*atom
+        counts[atom] = int(count)
+    return counts
+
