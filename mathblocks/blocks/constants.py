@@ -1,19 +1,33 @@
 PLAYER = "player"
-TARG = "targ"
 PILE = "pile"
-ITEM = "item"
+BLOCK = "block"
 DIVIDER = "divider"
 BUTTON = "button"
+OPERATOR = "operator"
 DEFAULT = "default"
 
 OBJECT_TYPES = {
-    PLAYER: PLAYER,
-    TARG: TARG,
-    PILE: PILE,
-    ITEM: ITEM,
-    DIVIDER: DIVIDER,
-    BUTTON: BUTTON
+    PLAYER,
+    PILE,
+    BLOCK,
+    DIVIDER,
+    BUTTON,
+    OPERATOR
 }
+
+ADD = "+"
+SUBTRACT = "-"
+MULTIPLY = "*"
+
+OPERATORS = {
+    ADD,
+    SUBTRACT,
+    MULTIPLY,
+}
+
+BLOCK_VALS = [1, 5, 10, 50, 100]
+sizes = [(1,1), (5,1), (5,2), (10,5), (25,4)]
+BLOCK_SIZES = {bv: size for bv, size in zip(BLOCK_VALS, sizes)}
 
 STAY = 0
 UP = 1
@@ -37,26 +51,26 @@ DIRECTION2STR = {
     LEFT:  "LEFT"
 }
 
+BLOCK_COLORS = [
+    0.07,
+    0.15,
+    0.23,
+    0.39,
+    0.43
+]
 
-"""
-colors: dict
-    a dictionary to indicate what objects have what color
-    items: (key: str, val: float)
-      targ: the color of the target items
-      pile: the color of the pile of items
-      item: the color of individual items separated from the pile
-      player: the color of the player
-      button: the color of the ending button
-"""
 COLORS = {
-    TARG: .4,
-    PILE: .20,
-    ITEM: .09,
-    PLAYER: .69,
+    PILE: 0.01,
+    BLOCK: 0,
+    PLAYER: -0.127,
     DIVIDER: -.3,
-    BUTTON: -.1,
+    BUTTON: -.2,
     DEFAULT: 0,
+    OPERATOR: -0.08
 }
+for bv in BLOCK_VALS:
+    COLORS[PILE+str(bv)] = COLORS[PILE] + bv
+    COLORS[BLOCK+str(bv)] = COLORS[BLOCK] + bv
 
 """
 The events are used in the game to signal what type of event occurred
