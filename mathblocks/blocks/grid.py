@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from mathblocks.blocks.constants import PLAYER, TARG, PILE, ITEM, DIVIDER, BUTTON, OBJECT_TYPES, STAY, UP, RIGHT, DOWN, LEFT, DIRECTIONS, COLORS, EVENTS, STEP, BUTTON, FULL, DEFAULT
+from mathblocks.blocks.constants import *
 
 """
 The grid class handles the drawing of objects to the image. It enables
@@ -149,7 +149,7 @@ class Grid:
         """
         self._grid = self.make_grid(do_divide=self.is_divided)
 
-    def clear_unit(self, coord):
+    def clear_unit(self, coord, size=(1,1)):
         """
         Clears a single coordinate in place. More efficient than using
         draw to draw zeros
@@ -157,9 +157,13 @@ class Grid:
         Args:
           coord: list like (row, col)
         """
-        prow,pcol = self.units2pixels(coord)
-        self._grid[prow:prow+self.density, pcol:pcol+self.density] = COLORS[DEFAULT]
-    
+        self.draw(
+            coord,
+            size=size,
+            color=COLORS[DEFAULT],
+            add_color=False
+        )
+
     def clear_playable_space(self):
         """
         Clears the playable space of the grid in place. This means it
