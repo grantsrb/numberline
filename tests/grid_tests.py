@@ -58,17 +58,23 @@ if __name__=="__main__":
     plt.imshow(grid.grid)
     plt.show()
 
-    grid = Grid(30, pixel_density=1, divide=True)
+    grid = Grid(31, pixel_density=1, divide=True)
     plt.imshow(grid.grid)
     plt.show()
-    arr = np.zeros((30,30))
+    arr = np.zeros((31,31))
     arr[grid.middle_row,:] = COLORS[DIVIDER]
     assert np.array_equal(grid.grid, arr)
-    assert grid.shape == (30,30)
-    assert grid.pixel_shape == (30,30)
+    assert grid.shape == (31,31)
+    assert grid.pixel_shape == (31,31)
     assert grid.density == 1
     assert grid.is_divided == True
     assert grid.middle_row == 15
+    grid.draw((1,2), (1,5), color=1)
+    assert grid.grid[1,2] == 1
+    grid.draw((11,3), (4,1), color=.5)
+    grid.draw((11,4), (1,1), color=1)
+    plt.imshow(grid.grid)
+    plt.show()
 
     grid = Grid(31, pixel_density=10, divide=False)
     assert np.array_equal(grid.grid, np.zeros((310,310)))
@@ -89,14 +95,14 @@ if __name__=="__main__":
     assert grid.density == 10
     assert grid.middle_row == 15
 
-    grid.draw((1,2), (1,1), color=1)
+    grid.draw((1,2), (1,5), color=1)
     assert grid.grid[10,20] == 1
     assert grid.grid[19,29] == 0
     grid.draw((11,3), (1,1), color=.5)
     grid.draw((11,4), (1,1), color=1)
     plt.imshow(grid.grid)
     plt.show()
-    grid.clear_unit((1,2))
+    grid.clear_unit((1,2), (1,5))
     grid.clear_unit((11,3))
     grid.clear_unit((11,4))
     assert not np.array_equal(grid.grid, np.zeros(grid.pixel_shape))
