@@ -1,5 +1,6 @@
 from mathblocks.blocks.grid import Grid
-from mathblocks.blocks.constants import PLAYER, TARG, PILE, ITEM, DIVIDER, BUTTON, BUTTON_PRESS, OBJECT_TYPES, STAY, UP, RIGHT, DOWN, LEFT, DIRECTIONS, COLORS, EVENTS, STEP, FULL, DEFAULT
+from mathblocks.blocks.constants import *
+from mathblocks.blocks.utils import coord_diff, coord_add
 import math
 import numpy as np
 
@@ -12,7 +13,8 @@ class GameObject:
     def __init__(self,
                  obj_type: str,
                  color: float,
-                 coord: tuple=(0,0)):
+                 coord: tuple=(0,0),
+                 size: tuple=(1,1)):
         """
         obj_type: str
           the type of object. see OBJECT_TYPES for a list of available
@@ -21,11 +23,15 @@ class GameObject:
           the color of the object
         coord: tuple (row, col) in grid units
           the initial coordinate of the object
+        size: tuple (n_row, n_col) in grid units
+          the size of the rectangle representing the object.
         """
         self._obj_type = obj_type
         self._color = color
         self.coord = coord
-        self.prev_coord = (-math.inf, -math.inf) # used to track changes for drawing to grid
+        self._size = size
+        # used to track changes for drawing to grid
+        self.prev_coord = (-math.inf, -math.inf)
 
     def move_to(self, coord):
         """
@@ -42,32 +48,226 @@ class GameObject:
     def color(self):
         return self._color
 
+    @property
+    def size(self):
+        return self._size
+
     def __str__(self):
         return self.type
+
+class Player(GameObject):
+    """
+    The player object has special abilities to hold objects. While a
+    player object is holding another object, updates to the player's
+    coordinates will affect the object it is holding as well.
+    """
+    def __init__(self,
+                 color: float,
+                 coord: tuple=(0,0),
+                 size: tuple=(1,1)):
+        """
+        color: float
+          the color of the object
+        coord: tuple (row, col) in grid units
+          the initial coordinate of the object
+        size: tuple (n_row, n_col) in grid units
+          the size of the rectangle representing the object.
+        """
+        self.player_coord = coord
+        self.player_color = color
+        self.player_size = size
+        self.grabbed_obj = None
+        super().__init__(
+            obj_type=PLAYER,
+            color=color,
+            coord=coord,
+            size=size
+        )
+
+    def grab(self, obj):
+        """
+        Assists in grabbing a GameObject.
+
+        Args:
+            obj: GameObject
+        """
+        self.grabbed_obj = obj
+
+    def drop(self):
+        """
+        Assists in dropping a GameObject.
+        """
+        self.grabbed_obj = None
+
+    @property
+    def is_grabbing(self):
+        return self.grabbed_obj is not None
+
+    @property
+    def coord(self):
+        return self.player_coord
+
+    @coord.setter
+    def coord(self, new_coord):
+        """
+        If the player is grabbing an object, the position of the object
+        it is grabbing is also updated relative to the player's new
+        position. The grabbed object's relative position to the player
+        is maintained.
+        """
+        if self.is_grabbing:
+            diff = coord_diff(new_coord, self.player_coord)
+            self.player_coord = new_coord
+            obj_coord = coord_add(self.grabbed_obj.coord, diff)
+            self.grabbed_obj.coord = obj_coord
+        else:
+            self.player_coord = new_coord
+
+class Pile(GameObject):
+    """
+    Piles are a special type of gameobject that allow creation of a
+    new item of a particular size, color, and representative quantity.
+    The Pile class holds the information for all new items created from
+    itself.
+    """
+    def __init__(self, 
+                 obj_type: str,
+                 color: float,
+                 block_val: int,
+                 block_size: tuple,
+                 block_color: float,
+                 coord: tuple=(0,0),
+                 size: tuple=(1,1)):
+        """
+        obj_type: str
+          the type of object. see OBJECT_TYPES for a list of available
+          types.
+        color: float
+          the color of the object
+        block_val: int
+          the representative number that each item created from this
+          pile will represent.
+        block_size: int
+          the size of each block created from this pile
+        color: float
+          the color of each item created from this pile
+        coord: tuple (row, col) in grid units
+          the initial coordinate of the object
+        size: tuple (n_row, n_col) in grid units
+          the size of the rectangle representing the object.
+        """
+        super().__init__(
+            obj_type=obj_type,
+            color=color,
+            coord=coord,
+            size=size
+        )
+        self.block_val = block_val
+        self.block_size = block_size
+        self.block_color = block_color
+
+class Operator(GameObject):
+    """
+    Operators are a special type of gameobject that represent the
+    mathematical operation being performed in the displayed equation.
+    """
+    @staticmethod
+    def operation2size(operation):
+        """
+        Takes an operation and returns the size that the operator
+        should be. Operations are distinguished by the shape of the
+        operator object.
+
+        Args:
+            operation: str
+        Returns:
+            size: tuple (n_row,n_col)
+        """
+        if operation == ADD:
+            return (2,1)
+        elif operation == SUBTRACT:
+            return (1,2)
+        elif operation == MULTIPLY:
+            return (1,1)
+        else:
+            raise NotImplemented
+
+    def __init__(self, 
+                 color: float,
+                 operation: str=ADD,
+                 coord: tuple=(0,0)):
+        """
+        color: float
+          the color of the object
+        operation: str
+            the current operation that this operator represents
+        coord: tuple (row, col) in grid units
+          the initial coordinate of the object
+        """
+        self.operation = operation
+        size = Operator.operation2size(self.operation)
+        super().__init__(
+            obj_type=OPERATOR,
+            color=color,
+            coord=coord,
+            size=size
+        )
+
+class Block(GameObject):
+    """
+    Blocks are the building block :) of the game. Each block represents
+    a quantity. They can be stacked to build bigger blocks.
+    """
+    def __init__(self,
+                 color: float,
+                 val: int,
+                 coord: tuple=(0,0),
+                 size: tuple=(1,1)):
+        """
+        color: float
+          the color of the object
+        val: int
+          the representative number that each item created from this
+          pile will represent.
+        coord: tuple (row, col) in grid units
+          the initial coordinate of the object
+        size: tuple (n_row, n_col) in grid units
+          the size of the rectangle representing the object.
+        """
+        self.val = val
+        super().__init__(
+            obj_type=BLOCK+str(self.val),
+            color=color,
+            coord=coord,
+            size=size
+        )
 
 class Register:
     """
     The register tracks the coordinates of all objects within the game.
     The possible objects are:
-      targs - the target items for the game
-      items - the moveable items for the game
-      piles - the location for players to make and delete items
+      blocks - interactable objects that represent numerical values
+      piles - the location for players to make and delete blocks
       players - the agents within the game
       dividers - a dividing line across the middle of the map to
         distinguish playable area from target area
       buttons - a button to press once the player thinks the task is
         finished
+      operators - objects used to signify what mathematical operation
+        should be performed to find the goal value of blocks
     
     The register has two data structures to track the items in the game.
     It has a set called obj_register that holds all of the GameObjects
-    that are not dividers. It also has a dict called coord_register
-    that maps coordinates to sets of items. Only coordintates with
-    items are included in the coord_register.
+    that are not dividers. It also has a CoordRegister that enables
+    easy access to the objects located at particular coordinates within
+    the game.
 
-    The register also performs basic game logic. It handles moving the
-    player, prevents illegal moves, and handles item placement and
-    item creation (when player grabs from piles).
+    The register provides methods for basic manipulations such as moving
+    objects to specific coordinates, joining blocks into larger units,
+    and creating and destroying objects.
 
+
+    TODO: move this to Controller logic !!!!!!!!!!!!!!!!!!!!!!!!
     If the player was carrying an object and stepped onto another
     object, the game is handled as follows. While the player
     continues to grab, all objects and the player remain overlayn.
@@ -87,169 +287,158 @@ class Register:
     these spaces are free, the search repeats one more layer
     outward.
     """
-    def __init__(self,
-                 grid: Grid,
-                 n_targs: int):
+    def __init__(self, grid: Grid):
         """
-        Creates a player, a pile, and the specified number of targs.
-        
         Args:
           grid: Grid
             the grid for the game
-          n_targs: int
-            the number of targets on the screen
         """
         self.grid = grid
-        self.player = GameObject(obj_type=PLAYER, color=COLORS[PLAYER])
-        self.pile = GameObject(obj_type=PILE, color=COLORS[PILE])
+        init_coord = (0,0)
+        self.player = Player(
+            color=COLORS[PLAYER],
+            coord=init_coord,
+            size=(1,1)
+        )
         self.button = GameObject(obj_type=BUTTON, color=COLORS[BUTTON])
-        self._targs = self.make_targs(n_targs)
+        self.blocks = set()
+        self.piles = dict()
+        for bv, bs in zip(BLOCK_VALS, BLOCK_SIZES):
+            key = PILE+str(bv)
+            bc = COLORS[BLOCK+str(bv)]
+            pile = Pile(
+                obj_type=key,
+                color=COLORS[key],
+                block_val=bv,
+                block_size=bs,
+                block_color=bc,
+                coord=init_coord,
+                size=(1,1)
+            )
+            self.piles[key] = pile
+
+        # All GameObjects used to the left and right of the operator in
+        # the displayed equation
+        self.left_eqn = set()
+        self.right_eqn = set()
+        self.operator = Operator(
+            color=COLORS[OPERATOR],
+            size=(1,1),
+            coord=init_coord
+        )
+
         self.obj_register = {
             self.player,
-            self.pile,
+            *self.piles.values(),
             self.button,
-            *self._targs
+            self.operator
         }
-        self.coord_register = dict()
-        for row in range(self.grid.shape[0]):
-            for col in range(self.grid.shape[1]):
-                coord = (row,col)
-                self.coord_register[coord] = set()
-        self.coord_register[(0,0)] = set(self.obj_register)
+        self.coord_register = CoordRegister(OBJECT_TYPES, grid.shape)
         self.button_event_registry = set()
         self.full_grid_event_registry = set()
+        self._targ_val = None
 
     @property
-    def n_targs(self):
-        return len(self._targs)
+    def targ_val(self):
+        return self._targ_val
 
     @property
-    def n_items(self):
-        return len(self.items)
+    def n_blocks(self):
+        return len(self.blocks)
 
     @property
-    def items(self):
-        """
-        Filters the obj_register for the item type gameobjects
+    def block_sum(self):
+        s = 0
+        for block in self.blocks:
+            s += block.val
+        return s
 
-        Returns:
-            items: set of GameObjects
+    def val2blocks(self, val):
         """
-        items = set()
-        for obj in self.obj_register:
-            if obj.type == ITEM: items.add(obj)
-        return items
-
-    @property
-    def targs(self):
+        Uses the argued value to create the appropriate number of blocks
+        to represent that value. DOES NOT REGISTER THEM!!
+        
+        Args:
+          val: int
+            the value to be decomposed into blocks
+        Return:
+          blocks: set
+              the blocks representing the value. the sum of the values
+              of the blocks will be equivalent to the argued value
         """
-        Filters the obj_register for the targ type gameobjects
+        counts = decompose(val, BLOCK_VALS)
 
-        Returns:
-            targs: set of GameObjects
+        blocks = set()
+        for k in counts.keys():
+            for i in range(counts[k]):
+                blocks.add(
+                    Block(
+                        color=COLORS[BLOCK+str(k)],
+                        val=k,
+                        size=BLOCK_SIZES[k]
+                    )
+                )
+        return blocks
+
+    def make_eqn_blocks(self, left_val:int, right_val:int):
         """
-        return {*self._targs}
+        Creates the intial equation display. DOES NOT REGISTER THEM!!
+        
+        Args:
+          left_val: int
+            the value on the left side of the operator
+          right_val: int
+            the value on the right side of the operator
+        Return:
+          left_blocks: list
+              the blocks representing the left value
+          right_blocks: list
+              the blocks representing the left value
+        """
+        left_blocks = self.val2blocks(left_val)
+        right_blocks = self.val2blocks(right_val)
+        return left_blocks, right_blocks
 
-    def reset(self, n_targs: None or int=None):
+    def make_eqn(self, left_val: int, operation: str, right_val:int):
+        """
+        Creates and registers the equation pieces, but does not
+        arrange the pieces in space.
+
+        Args:
+          left_val: int
+            the value on the left side of the operator
+          operation: int
+            the operator type
+          right_val: int
+            the value on the right side of the operator
+        """
+        not impelmented
+
+    def reset(self, left_val: int, operation: str, right_val:int):
         """
         Resets the grid and draws the register to the grid
 
         Args:
-            n_targs: None or int
-                if int, changes the number of targets to match the
-                argued value. targs are deleted randomly.
+          left_val: int
+            the value on the left side of the operator
+          operation: int
+            the operator type
+          right_val: int
+            the value on the right side of the operator
         """
         self.delete_items()
-        if n_targs is not None: self.initialize_targs(n_targs)
+        self.make_eqn(targ_val)
         self.grid.reset() # makes a fresh grid
         self.draw_register()
 
-    def register_button_event_handler(self, fxn):
-        """
-        Registers a function to be called on a button press event.
+    #TODO: finish make_eqn func on 402
+    # make a system for grabbing
+    # make system for moving objects restricted to within bounds
+    # make system for adding and deleting objects
+    # make a system for merging blocks
 
-        Args:
-            fxn: callable function
-                the function to be called when a button press event
-                occurs
-        """
-        self.button_event_registry.add(fxn)
 
-    def register_full_grid_event_handler(self, fxn):
-        """
-        Registers a function to be called on a full grid event.
 
-        Args:
-            fxn: callable function
-                the function to be called when a full grid event
-                occurs
-        """
-        self.full_grid_event_registry.add(fxn)
-
-    def raise_full_grid_event(self):
-        """
-        Called when the grid is completely full. Calls all functions
-        registered in the full_grid_event_registry
-        """
-        for fxn in self.full_grid_event_registry:
-            fxn()
-
-    def raise_button_event(self):
-        """
-        Called when the button is pressed. Calls all functions in the
-        button_event_registry
-        """
-        for fxn in self.button_event_registry:
-            fxn()
-
-    def make_targs(self, n_targs: int):
-        """
-        Creates the intial target objects. DOES NOT REGISTER THEM!!
-        
-        Args:
-          n_targs: int
-            the number of targets to create
-        """
-        targs = set()
-        for i in range(n_targs):
-            targ = GameObject(
-              obj_type=TARG,
-              color=COLORS[TARG],
-              coord=(0,0)
-            )
-            targs.add(targ)
-        return targs
-
-    def initialize_targs(self, n_targs: int):
-        """
-        Creates or deletes targets from the self._targs set to match
-        the argued number of target objects.
-        
-        Args:
-          n_targs: int
-            the desired number of targets
-        """
-        if not hasattr(self, "_targs"):
-            self._targs = self.make_targs(n_targs)
-        elif len(self._targs) < n_targs:
-            n = n_targs - len(self._targs)
-            self._targs = {*self._targs, *self.make_targs(n)}
-        elif len(self._targs) > n_targs:
-            targs = self.targs
-            loop_len = len(self._targs)-n_targs
-            for i in range(loop_len):
-                self.delete_obj(targs.pop())
-        self.register_targs()
-        return self._targs
-
-    def register_targs(self):
-        """
-        Used as a failsafe to ensure all targs are registered in both
-        the obj and coord registers
-        """
-        for targ in self._targs:
-            self.obj_register.add(targ)
-            self.coord_register[targ.coord].add(targ)
 
     def step(self, direction: int, grab: int):
         """
@@ -328,21 +517,21 @@ class Register:
         assert len(prev_objs) < 4
         if len(prev_objs) > 1:
             # track the counts of each object type
-            objs = {k: [] for k in OBJECT_TYPES.keys()}
+            objs = {k: [] for k in OBJECT_TYPES}
             for obj in prev_objs:
                 objs[obj.type].append(obj)
             # If there is an item on the coordinate and there is a
             # pile too, then we delete the item
-            if len(objs[ITEM]) > 0 and len(objs[PILE]) > 0:
-                self.delete_obj(objs[ITEM][0])
+            if len(objs[BLOCK]) > 0 and len(objs[PILE]) > 0:
+                self.delete_obj(objs[BLOCK][0])
             # If there is an item and another item or a button,
             # then we find the nearest empty coordinate for one of the
             # items (they're interchangeable)
-            elif len(objs[ITEM]) > 1 or\
-                    len(objs[ITEM]) > 0 and len(objs[BUTTON]) > 0:
+            elif len(objs[BLOCK]) > 1 or\
+                    len(objs[BLOCK]) > 0 and len(objs[BUTTON]) > 0:
                 free_coord = self.find_space(player.prev_coord)
                 if free_coord is not None:
-                    self.move_object(objs[ITEM][0], free_coord)
+                    self.move_object(objs[BLOCK][0], free_coord)
                 else:
                     return FULL
         return STEP
@@ -480,7 +669,7 @@ class Register:
         """
         reg = {*self.obj_register}
         for obj in reg:
-            if obj.type == ITEM: self.delete_obj(obj)
+            if obj.type == BLOCK: self.delete_obj(obj)
 
     def handle_grab(self, player):
         """
@@ -502,7 +691,7 @@ class Register:
         prev_objs = set(self.coord_register[tuple(player.prev_coord)])
         if len(prev_objs) > 0:
             for obj in prev_objs:
-                if obj.type == ITEM:
+                if obj.type == BLOCK:
                     self.move_object(obj, coord=player.coord)
                     return STEP
             # Only possibility for 2 objects is if player is one of them
@@ -510,7 +699,7 @@ class Register:
                 prev_objs.remove(player)
             obj = prev_objs.pop()
             if obj.type == PILE:
-                self.make_object(obj_type=ITEM, coord=player.coord)
+                self.make_object(obj_type=BLOCK, coord=player.coord)
             elif obj.type == BUTTON:
                 self.raise_button_event()
                 return BUTTON_PRESS
@@ -788,7 +977,7 @@ class Register:
         """
         Initialization function for the line match game A.
 
-        The agent must align an item along the column of each
+        The agent must align a block along the column of each
         of the target objects
         """
         # each is randomly placed in the top row of the grid
@@ -811,7 +1000,7 @@ class Register:
         """
         Initialization function for the orthogonal line match game C.
 
-        The agent must evenly space an item for each target along a
+        The agent must evenly space a block for each target along a
         single column.
         """
         self.rand_pile_button_player()
@@ -822,12 +1011,50 @@ class Register:
         """
         Initialization function for the uneven line match game D.
 
-        The agent must align an item along the column of each
+        The agent must align a block along the column of each
         of the target objects
         """
         self.rand_pile_button_player()
         self.uneven_targ_spacing()
         self.draw_register()
+
+    def register_button_event_handler(self, fxn):
+        """
+        Registers a function to be called on a button press event.
+
+        Args:
+            fxn: callable function
+                the function to be called when a button press event
+                occurs
+        """
+        self.button_event_registry.add(fxn)
+
+    def register_full_grid_event_handler(self, fxn):
+        """
+        Registers a function to be called on a full grid event.
+
+        Args:
+            fxn: callable function
+                the function to be called when a full grid event
+                occurs
+        """
+        self.full_grid_event_registry.add(fxn)
+
+    def raise_full_grid_event(self):
+        """
+        Called when the grid is completely full. Calls all functions
+        registered in the full_grid_event_registry
+        """
+        for fxn in self.full_grid_event_registry:
+            fxn()
+
+    def raise_button_event(self):
+        """
+        Called when the button is pressed. Calls all functions in the
+        button_event_registry
+        """
+        for fxn in self.button_event_registry:
+            fxn()
 
 
 class CoordRegister:
@@ -948,7 +1175,7 @@ class CoordSet:
     """
     Acts as a helper class to the CoordRegister. This class is returned
     when the CoordRegister is indexed. It enables the user to add and
-    remove items from the CoordRegister at this coordinate using this
+    remove blocks from the CoordRegister at this coordinate using this
     class' API
     """
     def __init__(self, coord_register, coord):
@@ -969,7 +1196,7 @@ class CoordSet:
 
     def add(self, obj):
         """
-        This function is used to quickly add items to the CoordRegister
+        This function is used to quickly add blocks to the CoordRegister
         at the coordinate that corresponds to this CoordSet
 
         Args:
