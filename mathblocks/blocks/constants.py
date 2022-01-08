@@ -6,15 +6,6 @@ BUTTON = "button"
 OPERATOR = "operator"
 DEFAULT = "default"
 
-OBJECT_TYPES = {
-    PLAYER,
-    PILE,
-    BLOCK,
-    DIVIDER,
-    BUTTON,
-    OPERATOR
-}
-
 ADD = "+"
 SUBTRACT = "-"
 MULTIPLY = "*"
@@ -26,8 +17,33 @@ OPERATORS = {
 }
 
 BLOCK_VALS = [1, 5, 10, 50, 100]
-sizes = [(1,1), (5,1), (5,2), (10,5), (25,4)]
+sizes = [(1,1), (5,1), (10,1), (10,5), (20,5)]
 BLOCK_SIZES = {bv: size for bv, size in zip(BLOCK_VALS, sizes)}
+BLOCK_TYPES = [BLOCK+str(val) for val in BLOCK_VALS]
+PILE_TYPES = [PILE+str(val) for val in BLOCK_VALS]
+
+DECOMP_COORDS = {
+    BLOCK_VALS[1]: {(0,0), (1,0), (2,0), (3,0), (4,0)},
+    BLOCK_VALS[2]: {(0,0), (5,0)},
+    BLOCK_VALS[3]: {(0,0), (1,0), (2,0), (3,0), (4,0)},
+    BLOCK_VALS[4]: {(0,0), (10,0)},
+}
+
+# The prioritization of which objects are grabbed if the agent is
+# standing on overlapping objects
+GRAB_ORDER = [
+    BUTTON,
+    *BLOCK_TYPES,
+    *PILE_TYPES,
+]
+
+OBJECT_TYPES = {
+    *GRAB_ORDER,
+    PLAYER,
+    DIVIDER,
+    OPERATOR
+}
+
 
 STAY = 0
 UP = 1
