@@ -4,7 +4,8 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 from mathblocks.blocks import Discrete
 from mathblocks.blocks.controllers import *
-from mathblocks.blocks.constants import STAY, ITEM, TARG, PLAYER, PILE, BUTTON, OBJECT_TYPES
+from mathblocks.blocks.constants import *
+from mathblocks.blocks.utils import decompose
 import numpy as np
 
 try:
@@ -13,64 +14,63 @@ try:
 except ImportError as e:
     raise error.DependencyNotInstalled("{}. (HINT: see matplotlib documentation for installation https://matplotlib.org/faq/installing_faq.html#installation".format(e))
 
-class MathGame(gym.Env):
+
+class MathBlocks(gym.Env):
     """
     The base class for all mathblocks variants.
     """
     metadata = {'render.modes': ['human']}
 
     def __init__(self,
-                 targ_range=(1,10),
-                 grid_size=(31,31),
-                 pixel_density=5,
-                 harsh=True,
+                 targ_range: tuple=(1,10),
+                 grid_size: tuple=(31,31),
+                 pixel_density: int=1,
+                 max_num: int=500,
+                 operators: set or list=OPERATORS,
                  *args, **kwargs):
         """
-        Args:
-            targ_range: tuple of ints (low, high) (both inclusive)
-                the range of potential target counts for the game
-            grid_size: tuple of ints (n_row, n_col)
-                the dimensions of the grid in grid units
-            pixel_density: int
-                the number of pixels per unit in the grid
-            harsh: bool
-                changes the reward system to be more continuous if false
+        targ_range: tuple (Low, High) (inclusive)
+            the low and high number of target values for the game. Each
+            displayed equation has a solution within this range.
+        grid_size: tuple (Row, Col)
+            the dimensions of the grid in grid units
+        pixel_density: int
+            the side length of a single grid unit in pixels
+        max_num: int (inclusive)
+            the maximum number that can be included in the display
+            equation
+        operators: set of str
+            a sequence of potential operators to learn.
         """
-        # determines the unit dimensions of the grid
+        self.targ_range = targ_range
+        if type(targ_range) == int:
+            self.targ_range = (targ_range,targ_range)
         self.grid_size = grid_size
-        # determines the number of pixels per grid unit
         self.pixel_density = pixel_density
+        self.max_num = max_num
+        self.operators = operators
+
         # tracks number of steps in episode
         self.step_count = 0
         # used in calculations of self.max_steps
         self.max_step_base = self.grid_size[0]//2*self.grid_size[1]*2
         # gets set in reset(), limits number of steps per episode
         self.max_steps = 0
-        self.targ_range = targ_range
-        if type(targ_range) == int:
-            self.targ_range = (targ_range,targ_range)
-        self.harsh = harsh
         self.viewer = None
-        self.action_space = Discrete(6)
-        self.is_grabbing = False
+        self.action_space = Discrete(7)
         self.set_controller()
 
     def set_controller(self):
         """
         Must override this function and set a member `self.controller`
         """
-        self.controller = None # Must set a controller
-        raise NotImplemented
-
-    def _toggle_grab(self):
-        grab = not self.is_grabbing
-        coord = self.controller.register.player.coord
-        if self.is_grabbing:
-            self.is_grabbing = False
-        # we know is_grabbing is false here
-        elif not self.controller.register.is_empty(coord):
-            self.is_grabbing = True
-        return grab
+        self.controller = Controller(
+            targ_range=self.targ_range,
+            grid_size=self.grid_size,
+            pixel_density=self.pixel_density,
+            max_num=self.max_num,
+            operators=self.operators
+        )
 
     def step(self, action):
         """
@@ -95,65 +95,51 @@ class MathGame(gym.Env):
                 whatever information the game contains
         """
         self.step_count += 1
-        if action < 5:
-            direction = action
-            grab = self.is_grabbing
-        else:
-            direction = STAY
-            grab = self._toggle_grab()
-        self.last_obs,rew,done,info = self.controller.step(
-            direction,
-            int(grab)
-        )
+        self.last_obs,rew,done,info = self.controller.step(action)
         player = self.controller.register.player
-        info["grab"] = self.get_other_obj_idx(player, grab)
+        info["grab"] = self.get_held_obj_idx(player)
         if self.step_count > self.max_steps: done = True
         elif self.step_count == self.max_steps and rew == 0:
-            rew = self.controller.max_punishment
+            rew = -1
             done = True
         return self.last_obs, rew, done, info
 
-    def get_other_obj_idx(self, obj, grab):
+    def get_held_obj_idx(self, player):
         """
-        Finds and returns an int representing the first game object
-        that is not the argued object and is located at the locations
-        of the argued object. 
+        Returns an integer representing what type of object the player
+        is holding. If the player is on top of a pile and holding an
+        object, then the pile is recorded instead of the object.
+
+            Nothing: 0
+            Pile: 1
+            Block: 2
+            Button: 3
 
         Args:
-            obj: GameObject
-            grab: bool
-                the player's current grab state
+            player: Player
         Returns:
-            other_obj: GameObject or None
-                one of the other objects located at this location.
-                The priority goes by type, see `priority`
-        """
-        # Langpractice depends on this order
-        priority = [
-            PILE,
-            BUTTON,
-            ITEM,
-            PLAYER,
-            TARG,
-        ]
-        if not grab: return 0
-        reg = self.controller.register.coord_register
-        objs = {*reg[obj.coord]}
-        if len(objs) == 1: return 0
-        objs.remove(obj)
-        memo = {o: set() for o in priority}
-        # Sort objects
-        for o in objs:
-            memo[o.type].add(o)
-        # return single object by priority
-        for i,o in enumerate(priority):
-            if len(memo[o]) > 0: return i+1
-        return 0
+            other_obj_type: int
+                an integer representing the object that the player
+                is holding. If player is on top of a pile while holding
+                a block, the pile is recorded as the object the player
+                is holding.
 
-    def reset(self, n_targs=None):
-        self.controller.reset(n_targs=n_targs)
-        self.max_steps = (self.controller.n_targs+1)*self.max_step_base
-        self.is_grabbing = False
+                Returns 0 if player is not holding an object.
+        """
+        if not player.is_holding: return 0
+        pcoords = {
+          v.coord for v in self.controller.register.piles.values()
+        }
+        if player.coord in pcoords: return 1
+        if player.held_obj == self.controller.register.button:
+            return 3
+        return 2
+
+    def reset(self, targ_val=None):
+        self.controller.reset(targ_val=targ_val)
+        atoms = decompose(self.controller.register.targ_val, BLOCK_VALS)
+        n_atoms = np.sum(list(atoms.values()))
+        self.max_steps = (n_atoms+1)*self.max_step_base
         self.step_count = 0
         self.last_obs = self.controller.grid.grid
         return self.last_obs

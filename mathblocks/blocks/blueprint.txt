@@ -1,0 +1,16 @@
+Specs:
+CoordRegister:
+
+Register:
+
+Completed
+- If stacked items sum to new block type, agent can merge them to new block type
+- Delete objects
+- Allow agent to move with or without grabbing
+- Check if agent can grab object (must be on top of its upper left corner)
+- Attach object to agent if agent grabs and can grab
+- Limit agent's mobility based on grabbed object (use object's size for checking)
+- Items cannot be placed on top of piles or buttons
+- Draw all items to grid
+- Track what objects are at what coorinates
+- Update object's location (within object and internal tracking)

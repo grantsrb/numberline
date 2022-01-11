@@ -91,6 +91,13 @@ class Grid:
         """
         return int(self.shape[0]/2)
 
+    @property
+    def middle_col(self):
+        """
+        Returns the col that is considered the middle col
+        """
+        return int(self.shape[1]/2)
+
     def units2pixels(self, coord):
         """
         Converts coordinate units to pixels
@@ -361,7 +368,7 @@ class Grid:
         if self.is_divided: return self.is_inhalfbounds(coord, size)
         return self.is_inbounds(coord, size)
 
-    def is_innonplaybounds(self, coord, size):
+    def is_innonplay(self, coord, size=(1,1)):
         """
         Takes a coord and determines if it is within the non-playable
         divided boundaries of the grid if the grid is divided, or simply

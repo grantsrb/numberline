@@ -260,7 +260,7 @@ def decompose(val, atoms):
     """
     atoms = list(reversed(sorted(atoms)))
     counts = {atom: 0 for atom in atoms}
-    remaining = val
+    remaining = int(val)
     for atom in atoms:
         if remaining <= 0 or atom <= 0: break
         count = remaining/atom
@@ -269,3 +269,40 @@ def decompose(val, atoms):
         counts[atom] = int(count)
     return counts
 
+def get_multiples_pairs(val):
+    """
+    Returns a list of all pairs of multiples of the argued value.
+    (1,val) is always included in the list.
+
+    Args:
+        val: int
+            must be positive real valued
+    Returns:
+        multiples: list of tuples of ints or None
+            returns None if val is less than or equal to 0
+    """
+    if val <= 0: return None
+    multiples = []
+    for i in range(1, int(np.sqrt(val))+1):
+        if val % i == 0: 
+            multiples.append((i, val//i))
+    return multiples
+
+def widest_width(block_sizes):
+    """
+    Returns the width of the widest block.
+
+    Args:
+        block_sizes: dict
+            keys: int
+                the values of the blocks
+            vals: tuple of ints (n_row, n_col)
+                the sizes of the blocks
+    Returns:
+        widest_width: int
+    """
+    widest = -np.inf
+    for size in block_sizes.values():
+        if size[1] > widest:
+            widest = size[1]
+    return widest

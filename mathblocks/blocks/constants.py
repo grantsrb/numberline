@@ -16,7 +16,7 @@ OPERATORS = {
     MULTIPLY,
 }
 
-BLOCK_VALS = [1, 5, 10, 50, 100]
+BLOCK_VALS = sorted([1, 5, 10, 50, 100])
 sizes = [(1,1), (5,1), (10,1), (10,5), (20,5)]
 BLOCK_SIZES = {bv: size for bv, size in zip(BLOCK_VALS, sizes)}
 BLOCK_TYPES = [BLOCK+str(val) for val in BLOCK_VALS]
@@ -50,6 +50,9 @@ UP = 1
 RIGHT = 2
 DOWN = 3
 LEFT = 4
+GRAB = 5
+DECOMP = 6
+
 
 DIRECTIONS = {
     STAY: STAY,
@@ -68,25 +71,25 @@ DIRECTION2STR = {
 }
 
 BLOCK_COLORS = [
-    0.07,
-    0.15,
-    0.23,
-    0.39,
-    0.43
+    0.071,      
+    0.0901,     
+    0.11001,    
+    0.130001,   
+    0.1600001,  
 ]
 
 COLORS = {
     PILE: 0.01,
     BLOCK: 0,
-    PLAYER: -0.127,
+    PLAYER: 0.1712345,
     DIVIDER: -.3,
     BUTTON: -.2,
     DEFAULT: 0,
     OPERATOR: -0.08
 }
-for bv in BLOCK_VALS:
-    COLORS[PILE+str(bv)] = COLORS[PILE] + bv
-    COLORS[BLOCK+str(bv)] = COLORS[BLOCK] + bv
+for bv,bc in zip(BLOCK_VALS, BLOCK_COLORS):
+    COLORS[PILE+str(bv)] = COLORS[PILE] + bc
+    COLORS[BLOCK+str(bv)] = COLORS[BLOCK] + bc
 
 """
 The events are used in the game to signal what type of event occurred

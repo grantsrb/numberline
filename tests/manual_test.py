@@ -1,15 +1,15 @@
-import gordongames
-from gordongames.envs.ggames.constants import *
+import mathblocks
+from mathblocks.blocks.constants import *
 import gym
 
 if __name__=="__main__":
     args = {
-        "grid_size": (9,9),
+        "grid_size": (50,50),
         "pixel_density": 1,
-        "targ_range": (1,4),
-        "harsh": False,
+        "targ_range": (1,13),
+        "max_num": 100,
     }
-    env = gym.make("gordongames-v6", **args)
+    env = gym.make("mathblocks-v0", **args)
 
     done = False
     rew = 0
@@ -24,6 +24,7 @@ if __name__=="__main__":
         elif key == "s": action = DOWN
         elif key == "a": action = LEFT
         elif key == "f": action = 5
+        elif key == "c": action = 6
         obs, rew, done, info = env.step(action)
         print("rew:", rew)
         print("done:", done)

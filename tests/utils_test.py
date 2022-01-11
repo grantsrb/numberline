@@ -19,6 +19,15 @@ class UtilsTests(unittest.TestCase):
             for k in soln.keys():
                 self.assertEqual(soln[k], counts[k])
 
+    def test_multiples(self):
+        nums = [1, 0, 10, 24, 16]
+        answers = [
+            [(1,1)],
+            None,
+            [(1,10), (2,5)],
+            [(1,24), (2,12), (3,8), (4,6)],
+            [(1,16), (2,8), (4,4)]
+        ]
 
 if __name__=="__main__":
     unittest.main()

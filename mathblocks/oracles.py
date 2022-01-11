@@ -22,19 +22,19 @@ class NullOracle(Oracle):
         return 0
 
 class RandOracle(Oracle):
-    def __init__(self, actn_min=0, actn_max=5):
-        self.brain = lambda: np.random.randint(actn_min, actn_max)
+    def __init__(self, actn_min=0, actn_max=6):
+        self.brain = lambda: np.random.randint(actn_min, actn_max+1)
 
     def __call__(self, *args, **kwargs):
         return self.brain()
 
-class CountingOracle(Oracle):
+class DirectOracle(Oracle):
     def __init__(self, env_type, *args, **kwargs):
         self.env_type = env_type
         self.is_grabbing = False
-        
+
         if self.env_type == "mathblocks-v0":
-            self.brain = mb.blocks.ai.counting
+            self.brain = mb.blocks.ai.direct_counter
         else:
             raise NotImplemented
         print("brain:", type(self.brain))
@@ -45,9 +45,5 @@ class CountingOracle(Oracle):
             env: SequentialEnvironment
                 the environment
         """
-        (direction, grab) = self.brain(env.controller)
-        if grab == self.is_grabbing:
-            return direction
-        else:
-            self.is_grabbing = grab
-            return 5
+        return self.brain(env.controller)
+
