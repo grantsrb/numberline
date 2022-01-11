@@ -1,27 +1,24 @@
-import gordongames
+import mathblocks
 import gym
-from gordongames.envs.ggames.ai import even_line_match, cluster_match
-from gordongames.envs.ggames.constants import DIRECTION2STR
-from gordongames.oracles import GordonOracle
+from mathblocks.blocks.constants import DIRECTION2STR
+from mathblocks.oracles import DirectOracle
 
 if __name__=="__main__":
     kwargs = {
-        "targ_range": (1,6),
-        "grid_size": (13,9),
-        "pixel_density": 4,
-        "harsh": True,
+        "targ_range": (1,25),
+        "grid_size": (50,30),
+        "pixel_density": 1,
+        "max_num": 50
     }
     env_names = [
-        "gordongames-v1",
-        "gordongames-v2",
-        "gordongames-v3",
-        "gordongames-v5",
-        "gordongames-v6",
+        "mathblocks-v0",
     ]
     for env_name in env_names:
         print("Testing Env:", env_name)
+        for k,v in kwargs.items():
+            print(k, "-", v)
         env = gym.make(env_name, **kwargs)
-        oracle = GordonOracle(env_name)
+        oracle = DirectOracle(env_name)
         for i in range(7):
             obs = env.reset()
             done = False

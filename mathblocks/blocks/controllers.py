@@ -38,16 +38,21 @@ class Controller:
         if type(targ_range) == int:
             targ_range = (targ_range, targ_range)
         assert targ_range[0] <= targ_range[1]
-        assert targ_range[0] >= 0 and targ_range[1] < grid_size[1]
         assert grid_size[0] >= 2*BLOCK_SIZES[BLOCK_VALS[-1]][0]+10
-        if targ_range[1] <= 10:
-            assert grid_size[1] >= 7
-        elif targ_range[1] <= 50:
-            assert grid_size[1] >= 11
-        elif targ_range[1] <= 100:
-            assert grid_size[1] >= 16
-        elif targ_range[1] <= 500:
-            assert grid_size[1] >= 36
+        # Calculations ensure that both sides of the equation have
+        # enough space for the maximum number plus 4 for the operator.
+        # The max target is divided by two because the width
+        # calculations multiply the block width by two for both sides
+        # of the equation. This does not factor in spacing between
+        # blocks
+        if max(max_num, targ_range[1]//2) <= 10:
+            assert grid_size[1] >= 14 # (1 + 4)*2 + 4
+        elif max(max_num, targ_range[1]//2) <= 50:
+            assert grid_size[1] >= 22 # (4 + 1 + 4)*2 + 4
+        elif max(max_num, targ_range[1]//2) <= 100:
+            assert grid_size[1] >= 32 # (5 + 4 + 1 + 4)*2 + 4
+        elif max(max_num, targ_range[1]//2) <= 500:
+            assert grid_size[1] >= 68 # (4*5 + 5 + 4 + 1 + 4)*2 + 4
         self._targ_range = targ_range
         self._grid_size = grid_size
         self._pixel_density = pixel_density

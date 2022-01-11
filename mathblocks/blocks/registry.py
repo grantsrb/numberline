@@ -282,10 +282,8 @@ class Register:
         """
         self.clear_eqn()
         # Make new blocks to represent equation
-        left, right = Register.make_eqn_blocks(
-            left_val,
-            right_val
-        )
+        left =  Register.val2blocks(left_val)
+        right = Register.val2blocks(right_val)
         # Add blocks to registers
         for l in left: self.add_obj(l, coord=(0,0))
         for r in right: self.add_obj(r, coord=(0,0))
@@ -303,7 +301,7 @@ class Register:
         grid.
         """
         mid_col = self.grid.middle_col
-        row = self.grid.middle_row + int(self.grid.shape[0]/4)
+        row = self.grid.middle_row + int(self.grid.shape[0]/8)
         coord = (row, mid_col)
         if self.grid.is_innonplay(coord):
             if self.operator is not None:self.delete_obj(self.operator)
@@ -314,41 +312,53 @@ class Register:
             )
             self.add_obj(self.operator)
 
-    def place_left_eqn(self):
+    def place_left_eqn(self, spacing=0):
         """
         Places the blocks contained within the left side of the eqn on
         to the grid.
+
+        Args:
+            spacing: int
+                a space between each block
         """
-        space = self.grid.shape[1]-self.grid.middle_row
+        space = self.grid.shape[0]-self.grid.middle_row
         longest_block_len = BLOCK_SIZES[sorted(BLOCK_VALS)[-1]][0]
         row = self.grid.middle_row + int((space - longest_block_len)/2)
         endx = self.operator.coord[1]
         # Sorted blocks such that smallest are first
         blocks = sorted(list(self.left_eqn), key=lambda x: x.val)
+        # Loop through blocks placing them further and further away
+        # from operator.
         if len(blocks) > 0:
             col = endx
             for i,block in enumerate(blocks):
-                col = col-1-block.size[1]
+                col = col-spacing-block.size[1]
                 assert col > 0
                 coord = (row, col)
                 self.move_obj(block, coord)
 
-    def place_right_eqn(self):
+    def place_right_eqn(self, spacing=0):
         """
         Places the blocks contained within the right side of the eqn on
         to the grid.
+
+        Args:
+            spacing: int
+                a space between each block
         """
-        space = self.grid.shape[1]-self.grid.middle_row
+        space = self.grid.shape[0]-self.grid.middle_row
         longest_block_len = BLOCK_SIZES[sorted(BLOCK_VALS)[-1]][0]
         row = self.grid.middle_row + int((space - longest_block_len)/2)
         startx = self.operator.coord[1]+self.operator.size[1]
         # Sorted blocks such that largest are first
         blocks = sorted(list(self.right_eqn), key=lambda x: -x.val)
+        # Loop through blocks placing them further and further away
+        # from operator.
         if len(blocks) > 0:
             col = startx+1
             self.move_obj(blocks[0], (row, col))
             for i in range(1, len(blocks)):
-                col = col+blocks[i-1].size[1]+1
+                col = col+blocks[i-1].size[1]+spacing
                 assert col < self.grid.shape[1]
                 self.move_obj(blocks[i], (row, col))
 
