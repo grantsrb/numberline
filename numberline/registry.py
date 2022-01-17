@@ -33,7 +33,7 @@ class Register:
         self._zoom = 0
         self._operator = ADD
         self._operand = 0
-        self._trans = self.grid.middle
+        self._trans = 0
 
 
     @property
@@ -80,6 +80,16 @@ class Register:
         """
         return self._operator
 
+    @operator.setter
+    def operator(self, new_operator):
+        """
+        Args:
+            new_operator: str
+                the new operator. see `constants.OPERATORS` for
+                possible values
+        """
+        self._operator = new_operator
+
     @property
     def operand(self):
         """
@@ -95,6 +105,15 @@ class Register:
         """
         return self._operand
 
+    @operand.setter
+    def operand(self, new_operand):
+        """
+        Args:
+            new_operand: float
+                the new operand.
+        """
+        self._operand = new_operand
+
     @property
     def trans(self):
         """
@@ -108,8 +127,10 @@ class Register:
         integer.
 
         Returns:
-            operand: float
-                the value of the operand
+            trans: float
+                the number of units that the center of screen is away
+                from the 0 marker on the numberline. trans has
+                directionality
         """
         return self._trans
 
@@ -134,13 +155,25 @@ class Register:
             additive: float
                 the amount to change the current fill by
         """
-        self._fill += additive
+        self._fill += additive*(10**self.zoom)
+
+    def unit2val(self, unit):
+        """
+        Converts a unit distance from the 0 point to a value on the
+        current zoom level of the numberline
+
+        Args:
+            unit: int
+                the number of units away from the zero point on the
+                numberline
+        """
+        return unit*10**self.zoom
 
     def get_markers(self):
         """
         This function returns the coordinates and color values of each
         location in the current view that should be marked as a 10s
-        place.
+        place or 5's place.
 
         Returns:
             cols: list of ints
@@ -155,14 +188,19 @@ class Register:
             color = 0
             # Distance from the 0 point on the number line
             dist = self.trans - self.grid.middle + col
+            # full marker color if 10s place
             if dist != 0 and np.abs(dist) % 10 == 0:
                 cols.append(col)
-                log10 = int(np.log10(np.abs(dist)))
-                if log10 > 1 and np.abs(dist) % 10**log10 == 0:
-                    color = int(log10)*COLORS[MARKER]
-                else:
-                    color = COLORS[MARKER]
+                log10 = int(np.log10(np.abs(self.unit2val(dist))))
+                color = log10*COLORS[MARKER]+COLORS[MARKER_BASE]
                 colors.append(color)
+            # half marker color if 5s place
+            elif dist != 0 and (np.abs(dist)+5) % 10 == 0:
+                dist = np.abs(dist)+5
+                cols.append(col)
+                log10 = int(np.log10(np.abs(self.unit2val(dist))))
+                color = log10*COLORS[MARKER]+COLORS[MARKER_BASE]
+                colors.append(color/2)
         return cols, colors
 
     def draw_markers(self, add_color=True):
@@ -289,7 +327,7 @@ class Register:
         fillx = fill_units - col0ufz
         # Need to add onto the zero index and the fill index to ensure
         # that the zero index is left unfilled
-        if fillx > zero_idx: startx, endx = zero_idx+1, fillx+2
+        if fillx > zero_idx: startx, endx = zero_idx+1, fillx+1
         elif fillx < zero_idx: startx, endx = fillx, zero_idx
         else: return None, None # no fill 
         if startx < end: startx = max(startx, 0)

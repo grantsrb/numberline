@@ -306,3 +306,22 @@ def widest_width(block_sizes):
         if size[1] > widest:
             widest = size[1]
     return widest
+
+def get_max_steps(targ_val):
+    """
+    Returns the maximum steps allowed in a given episode.
+
+    Args:
+        targ_val: float
+    """
+    sig_figs = get_sig_figs(targ_val)
+    return 30
+
+def get_sig_figs(num):
+    """
+    Returns the number of significant figures of the argued number.
+
+    Args:
+        num: float
+    """
+    raise NotImplemented

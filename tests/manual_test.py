@@ -1,15 +1,14 @@
-import mathblocks
-from mathblocks.blocks.constants import *
+import numberline
+from numberline.constants import *
 import gym
 
 if __name__=="__main__":
     args = {
-        "grid_size": (50,50),
-        "pixel_density": 1,
+        "unit_density": 3,
         "targ_range": (1,13),
-        "max_num": 100,
+        "operators": {ADD, SUBTRACT},
     }
-    env = gym.make("mathblocks-v0", **args)
+    env = gym.make("numberline-v0", **args)
 
     done = False
     rew = 0
@@ -19,12 +18,13 @@ if __name__=="__main__":
     action = "w"
     while key != "q":
         key = input("action: ")
-        if key   == "w": action = UP
-        elif key == "d": action = RIGHT
-        elif key == "s": action = DOWN
-        elif key == "a": action = LEFT
-        elif key == "f": action = 5
-        elif key == "c": action = 6
+        if key   == "w": action = ACTION2IDX[ZOOM_IN]
+        elif key == "d": action = ACTION2IDX[RIGHT]
+        elif key == "s": action = ACTION2IDX[ZOOM_OUT]
+        elif key == "a": action = ACTION2IDX[LEFT]
+        elif key == "f": action = ACTION2IDX[ADD_ONE]
+        elif key == "c": action = ACTION2IDX[SUBTRACT_ONE]
+        elif key == "r": action = ACTION2IDX[END_GAME]
         obs, rew, done, info = env.step(action)
         print("rew:", rew)
         print("done:", done)

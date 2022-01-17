@@ -1,7 +1,6 @@
-from mathblocks.blocks.grid import Grid
-from mathblocks.blocks.registry import Register
-from mathblocks.blocks.constants import *
-from mathblocks.blocks.utils import get_rows_and_cols, get_aligned_items, get_max_row, get_multiples_pairs
+from numberline.grid import Grid
+from numberline.registry import Register
+from numberline.constants import *
 import numpy as np
 
 """
@@ -21,9 +20,9 @@ class Controller:
                  op_range: tuple=(1,100),
                  operators: list or set={ADD, SUBTRACT},
                  is_discrete: bool=True,
-                 zoom_range: tuple | None=None,
-                 scroll_range: tuple | None=None,
-                 ep_reset: bool=False
+                 zoom_range: tuple or None=None,
+                 scroll_range: tuple or None=None,
+                 ep_reset: bool=True,
                  *args, **kwargs):
         """
         unit_density: int
@@ -75,7 +74,7 @@ class Controller:
         self._zoom_range = zoom_range
         self._scroll_range = scroll_range
         self._ep_reset = ep_reset
-        self.grid = Grid( unit_density=unit_density)
+        self.grid = Grid(unit_density=unit_density)
         self.register = Register(grid=self.grid)
 
     @property
@@ -206,7 +205,7 @@ class Controller:
         self._ep_reset = new_val
 
     def calculate_reward(self):
-        if self.register.fill == self.register.targ_fill:
+        if self.register.fill == self.targ_val:
             return 1
         return -1
 
@@ -217,7 +216,7 @@ class Controller:
 
         Args:
           actn: int [0, 1, 2, 3, 4, 5, 6]
-            Check ACTIONS dict to ensure these values haven't changed
+            Check IDX2ACTION dict to ensure these values haven't changed
                 0: translate right
                 1: translate left
                 2: zoom in
@@ -248,9 +247,9 @@ class Controller:
         }
         done = False
         rew = 0
-        if actn == ACTIONS[END]:
+        if actn == ACTION2IDX[END_GAME]:
             done = True
-            rew = self.calc_reward()
+            rew = self.calculate_reward()
         self.register.draw_register()
         return self.grid.grid, rew, done, info
 
@@ -276,8 +275,11 @@ class Controller:
             operand = targ_val/self.register.fill
         elif operator == DIVIDE:
             operand = targ_val*self.register.fill
-        self.register.operator = operator
-        self.register.operand = operand
+        self.targ_val = targ_val
+        self.operator = operator
+        self.operand = operand
+        self.register.operator = self.operator
+        self.register.operand = self.operand
         self.register.draw_register()
         return self.grid.grid
 

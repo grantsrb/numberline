@@ -1,8 +1,10 @@
+ARBITRARY_MAX_STEPS = 30
 # GENERAL
 OPERATOR = "operator"
 DEFAULT = "default"
 FILL = "fill"
 MARKER = "marker"
+MARKER_BASE = "marker_base"
 ZERO = "zero"
 
 # Operations
@@ -30,7 +32,7 @@ LEFT = "left"
 ZOOM_IN = "zoom_in"
 ZOOM_OUT = "zoom_out"
 ADD_ONE = "add_one"
-TAKE_ONE = "take_one"
+SUBTRACT_ONE = "take_one"
 END_GAME = "end_game"
 actns = [
     RIGHT,
@@ -38,17 +40,19 @@ actns = [
     ZOOM_IN,
     ZOOM_OUT,
     ADD_ONE,
-    TAKE_ONE,
+    SUBTRACT_ONE,
     END_GAME,
 ]
-ACTIONS = {actn: i for i,actn in enumerate(actns)}
+ACTION2IDX = {actn: i for i,actn in enumerate(actns)}
+IDX2ACTION = {i: actn for i,actn in enumerate(actns)}
 
 
 # COLORS
 COLORS = {
     DEFAULT: 0,
-    ZERO: -0.118923,
+    ZERO: -0.258923,
     MARKER: -0.16719,
+    MARKER_BASE: 0.05111,
     FILL: 0.23317,
 
     # OPERATORS
@@ -59,7 +63,7 @@ COLORS = {
 }
 
 # The amount that the fill changes when adding and subtracting fill.
-FILL_INCREMENT = 10 
+FILL_INCREMENT = 1 
 
 # The amount that the raw value is divided by to find a pixel value for
 # each value

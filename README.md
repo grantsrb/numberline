@@ -62,7 +62,7 @@ At the time of creation, the game allows for a variety of initial settings.
 - is\_discrete (bool): indicates if the operator and target number ranges should be discrete or continuous. true means numbers are discrete. defaults to True
 - zoom\_range (tuple of inclusive floats | None): indicates if the zoom should be restricted to finite amounts. 0 is a zoom level in which each unit represents a value of 1. A zoom of 1 is a level in which each unit represents 10. A zoom of -1 has each unit represent 0.1. Pixel values are set to the zoom level divided by `numberline.constants.ZOOM_DIVISOR`. defaults to None
 - scroll\_range (tuple of inclusive ints | None): if None, no limits are set on the ability to scroll left and right. Otherwise the argued integers represent the min and maximum scrollable values on the numberline. defaults to None
-- ep\_reset (bool): if true, the value of the numberline resets after each episode. If false the value of the numberline persists through episodes. defaults to false.
+- ep\_reset (bool): if true, the value of the numberline resets after each episode. If false the value of the numberline persists through episodes. defaults to True.
 
 Each of these options are member variables of the environment and they can be changed between episodes. The recommended way to set these values, however, is as keyword arguements following the environment name at the time of creation. For example:
 
