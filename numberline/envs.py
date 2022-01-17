@@ -2,10 +2,10 @@ import os, subprocess, time, signal
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
-from mathblocks.blocks import Discrete
-from mathblocks.blocks.controllers import *
-from mathblocks.blocks.constants import *
-from mathblocks.blocks.utils import decompose
+from numberline import Discrete
+from numberline.controllers import *
+from numberline.constants import *
+from numberline.utils import decompose
 import numpy as np
 
 try:
@@ -15,7 +15,7 @@ except ImportError as e:
     raise error.DependencyNotInstalled("{}. (HINT: see matplotlib documentation for installation https://matplotlib.org/faq/installing_faq.html#installation".format(e))
 
 
-class MathBlocks(gym.Env):
+class NumberLine(gym.Env):
     """
     The base class for all mathblocks variants.
     """

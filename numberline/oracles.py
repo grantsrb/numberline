@@ -37,7 +37,6 @@ class DirectOracle(Oracle):
             self.brain = mb.blocks.ai.direct_counter
         else:
             raise NotImplemented
-        print("brain:", type(self.brain))
 
     def __call__(self, env, *args, **kwargs):
         """
