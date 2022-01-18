@@ -14,7 +14,7 @@ class Controller:
     abstract and as such should not be implemented directly
     """
     def __init__(self,
-                 unit_density: int=5,
+                 pixel_density: int=5,
                  init_range: tuple=(0,0),
                  targ_range: tuple=(1,100),
                  op_range: tuple=(1,100),
@@ -25,7 +25,7 @@ class Controller:
                  ep_reset: bool=True,
                  *args, **kwargs):
         """
-        unit_density: int
+        pixel_density: int
             Number of numpy pixels making up the length and width of a
             single grid unit.
         init_range: tuple of ints
@@ -66,7 +66,7 @@ class Controller:
         assert zoom_range is None or zoom_range[0] <= zoom_range[1]
         assert scroll_range is None or scroll_range[0]<=scroll_range[1]
         self._targ_range = targ_range
-        self._unit_density = unit_density
+        self._pixel_density = pixel_density
         self._init_range = init_range
         self._op_range = op_range
         self._operators = list(operators)
@@ -74,7 +74,7 @@ class Controller:
         self._zoom_range = zoom_range
         self._scroll_range = scroll_range
         self._ep_reset = ep_reset
-        self.grid = Grid(unit_density=unit_density)
+        self.grid = Grid(pixel_density=pixel_density)
         self.register = Register(grid=self.grid)
 
     @property
@@ -110,7 +110,7 @@ class Controller:
 
     @property
     def density(self):
-        return self._unit_density
+        return self._pixel_density
 
     @density.setter
     def density(self, new_density):
@@ -119,7 +119,7 @@ class Controller:
             Number of numpy pixels making up the length and width of a
             single grid unit.
         """
-        self._unit_density = new_density
+        self._pixel_density = new_density
 
     @property
     def init_range(self):

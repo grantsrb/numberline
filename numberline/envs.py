@@ -22,7 +22,7 @@ class NumberLine(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self,
-                 unit_density: int=5,
+                 pixel_density: int=5,
                  init_range: tuple=(0,0),
                  targ_range: tuple=(1,100),
                  op_range: tuple=(1,100),
@@ -33,7 +33,7 @@ class NumberLine(gym.Env):
                  ep_reset: bool=True,
                  *args, **kwargs):
         """
-        unit_density: int
+        pixel_density: int
             Number of numpy pixels making up the length and width of a
             single grid unit.
         init_range: tuple of ints
@@ -67,7 +67,7 @@ class NumberLine(gym.Env):
             through episodes.
         """
         self._targ_range = targ_range
-        self._unit_density = unit_density
+        self._pixel_density = pixel_density
         self._init_range = init_range
         self._op_range = op_range
         self._operators = list(operators)
@@ -92,7 +92,7 @@ class NumberLine(gym.Env):
         Must override this function and set a member `self.controller`
         """
         self.controller = Controller(
-            unit_density=self.density,
+            pixel_density=self.density,
             init_range=self.init_range,
             targ_range=self.targ_range,
             op_range=self.op_range,
@@ -138,7 +138,7 @@ class NumberLine(gym.Env):
 
     @property
     def density(self):
-        return self._unit_density
+        return self._pixel_density
 
     @density.setter
     def density(self, new_density):
@@ -147,7 +147,7 @@ class NumberLine(gym.Env):
             Number of numpy pixels making up the length and width of a
             single grid unit.
         """
-        self._unit_density = new_density
+        self._pixel_density = new_density
         self.controller.density = new_density
 
     @property

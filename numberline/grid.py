@@ -10,9 +10,9 @@ that is manipulated for the output of any given step in the game.
 The grid array is always 100 units long plus a zero pixel at the
 lefmost positon plus the 4 operations pixels at the right most
 positions of the array. Each unit has a length and width in pixels of
-unit_density. In cases where the unit_density is equal to 1, each
+pixel_density. In cases where the pixel_density is equal to 1, each
 of the 100 units on the grid are represented as a single pixel. In
-cases where the unit_density is larger than 1, the pixels that make up
+cases where the pixel_density is larger than 1, the pixels that make up
 each unit are colored except for the rightmost column and lowermost row
 of pixels making up the unit. This alows for a visual space between
 adjacent units.
@@ -27,10 +27,10 @@ MARKER while preserving the filling information.
 """
 class Grid:
     def __init__(self,
-                 unit_density: int=1):
+                 pixel_density: int=1):
         """
         Args:
-          unit_density: int
+          pixel_density: int
             the length and width of a unit measured in pixels. If the
             argument is greater than 1, the coordinate is filled in
             the upper most left corner while leaving the column of
@@ -38,7 +38,7 @@ class Grid:
             the lowermost boundary blank (to display a visual
             separation of units to the user).
         """
-        self._unit_density = unit_density
+        self._pixel_density = pixel_density
         self._n_rows = 1
         # REGISTER REQUIRES THIS TO BE AN ODD NUMBER
         self._n_val_units = 101 # zero, 1-100 
@@ -108,10 +108,10 @@ class Grid:
     def density(self):
         """
         Returns:
-          unit_density: int
+          pixel_density: int
             the number of pixels per unit
         """
-        return self._unit_density
+        return self._pixel_density
 
     @property
     def shape(self):

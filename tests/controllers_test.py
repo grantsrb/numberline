@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 if __name__=="__main__":
     kwargs = {
-        "unit_density": 3,
+        "pixel_density": 3,
         "targ_range": (-123,123),
         "operators": {ADD, SUBTRACT},
     }

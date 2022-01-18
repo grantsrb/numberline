@@ -4,7 +4,7 @@ import gym
 
 if __name__=="__main__":
     args = {
-        "unit_density": 3,
+        "pixel_density": 3,
         "targ_range": (1,13),
         "operators": {ADD, SUBTRACT},
     }

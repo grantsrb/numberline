@@ -55,7 +55,7 @@ A +1 reward is granted when the agent successfully completes an operation.
 ### Initial Settings
 At the time of creation, the game allows for a variety of initial settings.
 
-- unit\_density (int): Number of numpy pixels making up the length and width of a single grid unit.
+- pixel\_density (int): Number of numpy pixels making up the length and width of a single grid unit.
 - init\_range (tuple of ints): A range of possible initial numberline values for each game (inclusive). defaults to (0,0). Only used once if `ep_reset` is true.
 - targ\_range (tuple of ints): A range of possible target solution counts for each game (inclusive). defaults to (1,100)
 - operators (list or set of str): the operators you would like to include in the game. The available arguments are contained in `numberline.constants.OPERATORS`
