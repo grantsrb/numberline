@@ -325,3 +325,45 @@ def get_sig_figs(num):
         num: float
     """
     raise NotImplemented
+
+def get_magnitude_counts(num):
+    """
+    Finds the count at each base 10 magnitude present within the
+    absolute value of the number. For example, if the number is 123.45,
+    or -123.45, the returned count dict would look have the following
+    entries:
+
+    counts = {
+        2: 1
+        1: 2
+        0: 3
+        -1: 4
+        -2: 5
+    }
+
+    Args:
+        num: float
+            some number that needs to be decomposed into its magnitudes
+    Returns:
+        counts: dict
+            The count of each magnitude of the absolute value of the
+            number decomposed into magnitudes of 10.
+            keys: int
+                the magnitudes of 10 that are present in the number
+            vals: int
+                the count of the corresponding magnitude
+    """
+    num = np.abs(num)
+    if num == 0: return dict()
+    ints = str(num)
+    counts = dict()
+    if "." in ints:
+        ints, decs = ints.split(".")
+        for i,k in zip(range(len(decs)), range(-1, -len(decs)-1, -1)):
+            count = int(decs[i])
+            if count > 0: counts[k] = count
+    for i in range(len(ints)):
+        count = int(ints[i])
+        if count > 0: counts[len(ints)-1-i] = count
+    return counts
+

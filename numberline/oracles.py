@@ -1,4 +1,4 @@
-import mathblocks as mb
+from numberline.ai import zoom_solution
 import numpy as np
 
 class Oracle:
@@ -31,10 +31,9 @@ class RandOracle(Oracle):
 class DirectOracle(Oracle):
     def __init__(self, env_type, *args, **kwargs):
         self.env_type = env_type
-        self.is_grabbing = False
 
         if self.env_type == "mathblocks-v0":
-            self.brain = mb.blocks.ai.direct_counter
+            self.brain = zoom_solution
         else:
             raise NotImplemented
 

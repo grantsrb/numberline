@@ -166,8 +166,26 @@ class Register:
             unit: int
                 the number of units away from the zero point on the
                 numberline
+        Returns:
+            val: int
+                a real value along the numberline
         """
         return unit*10**self.zoom
+
+    def val2unit(self, val):
+        """
+        Converts a numeric value to a unit distance from the 0 point on
+        the numberline at the current zoom level
+
+        Args:
+            val: int
+                a real value along the numberline
+        Returns:
+            unit: int
+                the number of units away from the zero point on the
+                numberline at the current zoom level
+        """
+        return int(val/(10**self.zoom))
 
     def get_markers(self):
         """
