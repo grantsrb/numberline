@@ -5,7 +5,7 @@ from gym.utils import seeding
 from numberline import Discrete
 from numberline.controllers import *
 from numberline.constants import *
-from numberline.utils import decompose
+from numberline.utils import decompose, get_magnitude_counts
 import numpy as np
 
 try:
@@ -274,7 +274,12 @@ class NumberLine(gym.Env):
             targ_val=targ_val,
             operator=operator
         )
-        self.max_steps = ARBITRARY_MAX_STEPS
+        mag_counts = get_magnitude_counts(self.controller.targ_val)
+        n_zooms = len(mag_counts)
+        n_fills = np.sum(list(mag_counts.values()))
+        n_trans = n_fills
+        n_actns = n_zooms + n_fills + n_trans
+        self.max_steps = n_actns + ARBITRARY_MAX_STEPS
         self.step_count = 0
         self.last_obs = self.controller.grid.grid
         return self.last_obs

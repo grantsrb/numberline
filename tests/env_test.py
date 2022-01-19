@@ -1,18 +1,18 @@
-import mathblocks
+import numberline
 import gym
-from mathblocks.blocks.constants import DIRECTION2STR
-from mathblocks.oracles import DirectOracle
+from numberline.constants import *
+from numberline.oracles import DirectOracle
 import time
 
 if __name__=="__main__":
     kwargs = {
-        "targ_range": (1,25),
-        "grid_size": (50,30),
-        "pixel_density": 1,
-        "max_num": 50
+        "pixel_density": 3,
+        "targ_range": (-123,123),
+        "init_range": (-123, 123),
+        "operators": {ADD, SUBTRACT},
     }
     env_names = [
-        "mathblocks-v0",
+        "numberline-v0",
     ]
     for env_name in env_names:
         print("Testing Env:", env_name)
@@ -25,6 +25,8 @@ if __name__=="__main__":
         }
         step_times = [0,0]
         while step_times[1] < 5000:
+            print()
+            print("Starting new game!")
             obs = env.reset()
             done = False
             while not done:
@@ -33,18 +35,15 @@ if __name__=="__main__":
                 actn = oracle(env)
                 actn_times[actn][0] += time.time()-start_t
                 actn_times[actn][1] += 1
-                print("Brain Time:", time.time()-start_t)
-                if actn < 5:
-                    print("actn:", DIRECTION2STR[actn])
-                else:
-                    print("actn: GRAB")
+                print("actn:", IDX2ACTION[actn])
                 start_t = time.time()
                 obs, rew, done, info = env.step(actn)
                 step_times[0] += time.time()-start_t
                 step_times[1] += 1
                 print("done: ", done)
                 print("rew: ", rew)
-                #env.render()
+                print("info:", info)
+                env.render()
         for actn, tup in actn_times.items():
             if tup[1] == 0: tup[1] = 1
             if actn < 5: actn = DIRECTION2STR[actn]

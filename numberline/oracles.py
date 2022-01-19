@@ -32,7 +32,7 @@ class DirectOracle(Oracle):
     def __init__(self, env_type, *args, **kwargs):
         self.env_type = env_type
 
-        if self.env_type == "mathblocks-v0":
+        if self.env_type == "numberline-v0":
             self.brain = zoom_solution
         else:
             raise NotImplemented

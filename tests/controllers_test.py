@@ -7,6 +7,7 @@ if __name__=="__main__":
     kwargs = {
         "pixel_density": 3,
         "targ_range": (-123,123),
+        "init_range": (-123,123),
         "operators": {ADD, SUBTRACT},
     }
     contr = controllers.Controller(

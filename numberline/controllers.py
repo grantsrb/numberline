@@ -244,6 +244,7 @@ class Controller:
             "operand": self.register.operand,
             "operator": self.register.operator,
             "trans": self.register.trans,
+            "targ_val": self.targ_val,
         }
         done = False
         rew = 0
@@ -253,19 +254,25 @@ class Controller:
         self.register.draw_register()
         return self.grid.grid, rew, done, info
 
-    def reset(self, targ_val=None, operator=None):
+    def reset(self, targ_val=None, operator=None, init_val=None):
         """
         This member must be overridden
         """
         self.register.reset(reset_fill=self.ep_reset)
+        if init_val is None:
+            init_val = np.random.randint(
+                self.init_range[0],
+                self.init_range[1]+1
+            )
+        self.register.fill = init_val
+        if operator is None:
+            i = np.random.randint(0, len(self.operators))
+            operator = self.operators[i]
         if targ_val is None:
             targ_val = np.random.randint(
                 self.targ_range[0],
                 self.targ_range[1]+1
             )
-        if operator is None:
-            i = np.random.randint(0, len(self.operators))
-            operator = self.operators[i]
         if operator == SUBTRACT:
             operand = self.register.fill - targ_val
         elif operator == ADD or self.register.fill == 0:

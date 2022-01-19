@@ -31,10 +31,20 @@ def zoom_solution(contr):
     remain_val = contr.targ_val-reg.fill
     if remain_val == 0: return ACTION2IDX[END_GAME]
     fill_trans = reg.val2unit(reg.fill)
-    if reg.trans < fill_trans:
-        return ACTION2IDX[RIGHT]
-    elif reg.trans > fill_trans:
-        return ACTION2IDX[LEFT]
+    if reg.trans != fill_trans:
+        trans_diff = fill_trans - reg.trans
+        # If diff is magnitudes greater, zoom out
+        if np.abs(trans_diff) > 10:
+            fill_counts = get_magnitude_counts(trans_diff)
+            mags = sorted(list(fill_counts.keys()), key=lambda x: -x)
+            if reg.zoom > mags[0]:
+                return ACTION2IDX[ZOOM_IN]
+            elif reg.zoom < mags[0]: 
+                return ACTION2IDX[ZOOM_OUT]
+        elif trans_diff > 0:
+            return ACTION2IDX[RIGHT]
+        elif trans_diff < 0:
+            return ACTION2IDX[LEFT]
 
     mag_counts = get_magnitude_counts(remain_val)
     # Descending remaining magnitude components
